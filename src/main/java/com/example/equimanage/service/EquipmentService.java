@@ -1,8 +1,10 @@
 package com.example.equimanage.service;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.example.equimanage.pojo.Equipment;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.example.equimanage.pojo.Equipment;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 /**
 * @author qqy20001120
@@ -10,4 +12,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
 * @createDate 2023-10-14 19:33:16
 */
 public interface EquipmentService extends IService<Equipment> {
+    String uploadById(Integer id, MultipartFile file) throws IOException;
 }

@@ -10,7 +10,11 @@ import com.example.equimanage.pojo.DTO.EquipmentDTO;
 import com.example.equimanage.pojo.Equipment;
 import com.example.equimanage.service.EquipmentService;
 import jakarta.annotation.Resource;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/equipment")
@@ -18,6 +22,9 @@ public class EquipmentController {
 
     @Resource
     private EquipmentService equipmentService;
+
+    @Value("${imgUploadPath}")
+    private String imgUploadPath;
 
 
     /**
@@ -36,6 +43,40 @@ public class EquipmentController {
             return Result.success(equipment.getId());
         }
     }
+
+
+    /**
+     * 上传图片
+     * @param id
+     * @param file
+     * @return
+     * @throws IOException
+     */
+    @PostMapping("/upload/{id}")
+    public Result uploadImage(@PathVariable Integer id, @RequestParam MultipartFile file) throws IOException {
+        return Result.success(equipmentService.uploadById(id, file));
+    }
+
+
+//    /**
+//     * 下载图片
+//     */
+
+//    @GetMapping("/{fileUUID}")
+//    public void imageDownload(@PathVariable String fileUUID, HttpServletResponse response) throws IOException {
+//        // 根据文件唯一标识符获取文件
+//        File uploadFile = new File(imgUploadPath+fileUUID);
+//        // 设置输出流的格式
+//        ServletOutputStream os = response.getOutputStream();
+//        response.addHeader("Content-Disposition", "attachment;filename="+ URLEncoder.encode(fileUUID, StandardCharsets.UTF_8));
+//        response.setContentType("application/octet-stream");
+//
+//        // 读取文件的字节流
+//        os.write(FileUtil.readBytes(uploadFile));
+//        os.flush();
+//        os.close();
+//    }
+
 
 
     /**

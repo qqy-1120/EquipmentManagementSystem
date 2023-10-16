@@ -13,3 +13,7 @@ mybatis-plus:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
     map-underscore-to-camel-case: false
     # 驼峰关闭可解决数据查询不全问题
+
+imgUploadPath: D:\img\
+
+

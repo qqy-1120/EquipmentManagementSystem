@@ -1,4 +1,4 @@
-package com.example.equimanage.common;
+package com.example.equimanage.config;
 
 import com.baomidou.mybatisplus.annotation.DbType;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
