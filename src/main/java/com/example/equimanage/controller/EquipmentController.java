@@ -49,7 +49,7 @@ public class EquipmentController {
      * 上传图片
      * @param id
      * @param file
-     * @return
+     * @return 图片url
      * @throws IOException
      */
     @PostMapping("/upload/{id}")

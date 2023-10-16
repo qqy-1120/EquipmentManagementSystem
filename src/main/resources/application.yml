@@ -1,5 +1,6 @@
 server:
   port: 9090
+  #address: 0.0.0.0
 
 spring:
   datasource:
@@ -16,4 +17,8 @@ mybatis-plus:
 
 imgUploadPath: D:\img\
 
-
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  enable-spring-security:
+    false
