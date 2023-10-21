@@ -30,7 +30,7 @@ public class Equipment implements Serializable {
     /**
      * 设备类别
      */
-    @TableField(value = "class")
+    @TableField(value = "category")
     private String category;
 
     /**
@@ -46,10 +46,16 @@ public class Equipment implements Serializable {
     private String number;
 
     /**
-     * 当前使用者
+     * 设备状态（闲置/正在使用/报废）
      */
-    @TableField(value = "user")
-    private String user;
+    @TableField(value = "state")
+    private Integer state;
+
+    /**
+     * 是否被领用
+     */
+    @TableField(value = "is_receive")
+    private Integer is_receive;
 
     /**
      * 领用时间
@@ -58,10 +64,16 @@ public class Equipment implements Serializable {
     private Date receive_time;
 
     /**
-     * 设备状态（正在使用/报废）
+     * 当前使用者id
      */
-    @TableField(value = "state")
-    private Integer state;
+    @TableField(value = "user_id")
+    private Integer user_id;
+
+    /**
+     * 当前使用者姓名
+     */
+    @TableField(value = "username")
+    private String username;
 
     /**
      * 设备图片

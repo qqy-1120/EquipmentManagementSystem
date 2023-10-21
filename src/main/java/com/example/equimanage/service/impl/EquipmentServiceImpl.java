@@ -4,9 +4,9 @@ import cn.hutool.core.util.IdUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.equimanage.common.Constants;
 import com.example.equimanage.exception.ServiceException;
-import com.example.equimanage.mapper.EquipmentMapper;
 import com.example.equimanage.pojo.Equipment;
 import com.example.equimanage.service.EquipmentService;
+import com.example.equimanage.mapper.EquipmentMapper;
 import jakarta.annotation.Resource;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -20,7 +20,7 @@ import java.util.List;
 /**
 * @author qqy20001120
 * @description 针对表【equipment】的数据库操作Service实现
-* @createDate 2023-10-14 19:33:16
+* @createDate 2023-10-20 16:02:02
 */
 @Service
 public class EquipmentServiceImpl extends ServiceImpl<EquipmentMapper, Equipment>
@@ -81,28 +81,6 @@ public class EquipmentServiceImpl extends ServiceImpl<EquipmentMapper, Equipment
         }
         return "";
     }
-    /**
-     *     public String uploadById(Integer paperid, MultipartFile file) throws IOException{
-     *         Paper one = paperMapper.selectById(paperid);
-     *         File uploadFileDir = new File(fileUploadPath);
-     *         if(!uploadFileDir.exists()) {
-     *             uploadFileDir.mkdirs();
-     *         }
-     *         // 定义一个文件唯一的标识码
-     *         String uuid = IdUtil.fastSimpleUUID();
-     *         String fileUUID = uuid+".pdf";
-     *         File uploadFile = new File(fileUploadPath+fileUUID);
-     *         // 存储文件
-     *         file.transferTo(uploadFile);
-     *
-     *         // 存入数据库
-     *         // pdf存的是文件url
-     *         String url = "http://localhost:9090/paper/"+fileUUID;
-     *         one.setPdf(url);
-     *         paperMapper.updateById(one);
-     *         return url;
-     *     }
-     */
 }
 
 

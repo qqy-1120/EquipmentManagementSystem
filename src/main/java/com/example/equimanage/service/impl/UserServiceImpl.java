@@ -13,7 +13,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 /**
-* @author qqy20001120
+* @author qqy
 * @description 针对表【user】的数据库操作Service实现
 * @createDate 2023-10-14 18:10:47
 */

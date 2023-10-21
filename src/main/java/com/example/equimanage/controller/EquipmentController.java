@@ -29,15 +29,16 @@ public class EquipmentController {
     /**
      * 新建设备（不带图片）
      * @param equipmentDTO
-     * @return 设备ID
+     * @return id
      */
     @PostMapping("/create")
     public Result createEquipment(@RequestBody EquipmentDTO equipmentDTO) {
-        Equipment equipment=copyProperties(equipmentDTO);
+        // todo: 要保证哪些字段不空？
         if(StringUtils.isBlank(equipmentDTO.getName())||StringUtils.isBlank(equipmentDTO.getCategory())
-                ||StringUtils.isBlank(equipmentDTO.getNumber())||StringUtils.isBlank(equipmentDTO.getUser())){
+                ||StringUtils.isBlank(equipmentDTO.getNumber())){
             return Result.failure(Constants.CODE_400, "参数不足");
         } else {
+            Equipment equipment=copyProperties(equipmentDTO);
             equipmentService.save(equipment);
             return Result.success(equipment.getId());
         }
@@ -81,7 +82,7 @@ public class EquipmentController {
     /**
      * 修改设备信息
      * @param equipmentDTO
-     * @return 1 or 0
+     * @return id
      */
     @PutMapping("/update")
     public Result updateEquipment(@RequestBody EquipmentDTO equipmentDTO) {
@@ -91,7 +92,8 @@ public class EquipmentController {
             return Result.failure(Constants.CODE_400, "参数错误");
         }
         else {
-            return Result.success(equipmentService.updateById(equipment));
+            equipmentService.updateById(equipment);
+            return Result.success(equipment.getId());
         }
     }
 
@@ -122,27 +124,30 @@ public class EquipmentController {
 
 
     /**
-     * 分页查询，模糊匹配
+     * 多条件分页查询
      * @param pageNum
      * @param pageSize
-     * @param searchTerm
+     * @param equipmentDTO
      * @return 设备list
      */
-    @GetMapping("/page/{pageNum}/{pageSize}/{searchTerm}")
-    public Result findByPage(@PathVariable Integer pageNum, @PathVariable Integer pageSize, @PathVariable String searchTerm) {
+    @GetMapping("/querypage/{pageNum}/{pageSize}")
+    public Result findByPage(@PathVariable Integer pageNum, @PathVariable Integer pageSize, @RequestBody EquipmentDTO equipmentDTO) {
         IPage<Equipment> page = new Page<>(pageNum, pageSize);
         QueryWrapper<Equipment> wrapper = new QueryWrapper<>();
-        wrapper.like("name", searchTerm)
-                .or()
-                .like("class", searchTerm)
-                .or()
-                .like("number", searchTerm)
-                .or()
-                .like("user", searchTerm)
-                .or() // 没有按状态查询
-                .like("location", searchTerm)
-                .or()
-                .like("configuration", searchTerm);
+        if(!StringUtils.isBlank(equipmentDTO.getCategory())){
+            wrapper.eq("category", equipmentDTO.getCategory());
+        }
+        if(!StringUtils.isBlank(equipmentDTO.getUsername())){
+            wrapper.like("username", equipmentDTO.getUsername());
+        }
+        if(equipmentDTO.getState() != null){
+            wrapper.eq("state", equipmentDTO.getState());
+        }
+        if(!StringUtils.isBlank(equipmentDTO.getLocation())){
+            wrapper.eq("location", equipmentDTO.getLocation());
+        }
+        wrapper.orderByAsc("state");
+        wrapper.orderByAsc("receive_time");
 
         return Result.success(equipmentService.page(page,wrapper));
     }
@@ -160,9 +165,11 @@ public class EquipmentController {
         equipment.setCategory(equipmentDTO.getCategory());
         equipment.setBuy_time(equipmentDTO.getBuy_time());
         equipment.setNumber(equipmentDTO.getNumber());
-        equipment.setUser(equipmentDTO.getUser());
-        equipment.setReceive_time(equipmentDTO.getReceive_time());
         equipment.setState(equipmentDTO.getState());
+        equipment.setIs_receive(equipmentDTO.getIs_receive());
+        equipment.setReceive_time(equipmentDTO.getReceive_time());
+        equipment.setUser_id(equipmentDTO.getUser_id());
+        equipment.setUsername(equipmentDTO.getUsername());
         equipment.setLocation(equipmentDTO.getLocation());
         equipment.setConfiguration(equipmentDTO.getConfiguration());
         return equipment;
