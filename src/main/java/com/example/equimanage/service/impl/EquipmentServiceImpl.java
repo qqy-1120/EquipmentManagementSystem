@@ -29,6 +29,9 @@ public class EquipmentServiceImpl extends ServiceImpl<EquipmentMapper, Equipment
     @Value("${imgUploadPath}")
     private String imgUploadPath;
 
+    @Value("${server.port}")
+    private String port;
+
     @Resource
     private EquipmentMapper equipmentMapper;
 
@@ -61,7 +64,7 @@ public class EquipmentServiceImpl extends ServiceImpl<EquipmentMapper, Equipment
         file.transferTo(uploadFile);
 
         // 存入数据库
-        String url = "http://localhost:9090/upload/"+fileUUID;
+        String url = "http://10.177.44.94:"+port+"/upload/"+fileUUID;
         one.setPhoto_url(url);
         equipmentMapper.updateById(one);
         return url;

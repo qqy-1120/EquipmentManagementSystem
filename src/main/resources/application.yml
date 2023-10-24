@@ -1,11 +1,10 @@
 server:
-  port: 9090
-  #address: 0.0.0.0
+  port: 9091
 
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/equi-db?serverTimezone=GMT%2b8
+    url: jdbc:mysql://10.177.44.94:3306/equi-db?serverTimezone=GMT%2b8
     username: root
     password: 155786
 
@@ -15,7 +14,8 @@ mybatis-plus:
     map-underscore-to-camel-case: false
     # 驼峰关闭可解决数据查询不全问题
 
-imgUploadPath: D:\img\
+#imgUploadPath: D:\img\
+imgUploadPath: /home/bz/equipmanage/image/
 
 springdoc:
   swagger-ui:
