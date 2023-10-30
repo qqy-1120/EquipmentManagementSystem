@@ -9,11 +9,13 @@ import com.example.equimanage.common.Result;
 import com.example.equimanage.pojo.DTO.EquipmentDTO;
 import com.example.equimanage.pojo.Equipment;
 import com.example.equimanage.service.EquipmentService;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import jakarta.annotation.Resource;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/equipment")
@@ -127,25 +129,39 @@ public class EquipmentController {
      * 多条件分页查询
      * @param pageNum
      * @param pageSize
-     * @param equipmentDTO
+     * @param
      * @return 设备list
      */
     @GetMapping("/querypage/{pageNum}/{pageSize}")
-    public Result findByPage(@PathVariable Integer pageNum, @PathVariable Integer pageSize, @RequestBody EquipmentDTO equipmentDTO) {
+    public Result findByPage(@PathVariable Integer pageNum, @PathVariable Integer pageSize, @RequestParam(required = false) List<String> categories,
+                             @RequestParam(required = false) List<String> usernames, @RequestParam(required = false) List<Integer> states,
+                             @RequestParam(required = false) List<String> locations) {
         IPage<Equipment> page = new Page<>(pageNum, pageSize);
         QueryWrapper<Equipment> wrapper = new QueryWrapper<>();
-        if(!StringUtils.isBlank(equipmentDTO.getCategory())){
-            wrapper.eq("category", equipmentDTO.getCategory());
+        if (categories != null && !categories.isEmpty()) {
+            wrapper.in("category", categories);
         }
-        if(!StringUtils.isBlank(equipmentDTO.getUsername())){
-            wrapper.like("username", equipmentDTO.getUsername());
+        if(usernames != null && !usernames.isEmpty()) {
+            wrapper.in("username", usernames);
         }
-        if(equipmentDTO.getState() != null){
-            wrapper.eq("state", equipmentDTO.getState());
+        if(states != null && !states.isEmpty()) {
+            wrapper.in("state", states);
         }
-        if(!StringUtils.isBlank(equipmentDTO.getLocation())){
-            wrapper.eq("location", equipmentDTO.getLocation());
+        if(locations != null && !locations.isEmpty()) {
+            wrapper.in("location", locations);
         }
+//        if(!StringUtils.isBlank(category)) {
+//            wrapper.eq("category", category);
+//        }
+//        if(!StringUtils.isBlank(username)){
+//            wrapper.like("username", username);
+//        }
+//        if(state != null){
+//            wrapper.eq("state", state);
+//        }
+//        if(!StringUtils.isBlank(location)){
+//            wrapper.eq("location", location);
+//        }
         wrapper.orderByAsc("state");
         wrapper.orderByAsc("receive_time");
 

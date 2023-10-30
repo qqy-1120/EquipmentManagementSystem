@@ -7,10 +7,7 @@ import com.example.equimanage.pojo.DTO.UserDTO;
 import com.example.equimanage.pojo.User;
 import com.example.equimanage.service.UserService;
 import jakarta.annotation.Resource;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RequestMapping("/api")
 @RestController
@@ -37,6 +34,11 @@ public class UserController {
         }
 
 
+    }
+
+    @GetMapping("/user/list")
+    public Result findAll() {
+        return Result.success(userService.list());
     }
     private Boolean isValid(UserDTO userDTO) {
         String username = userDTO.getUsername();

@@ -50,7 +50,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
             one.setUsername(userDTO.getUsername());
             one.setPassword(bCryptPasswordEncoder.encode(userDTO.getPassword()));
-            one.setIs_manager(0);
+            one.setIs_manager(userDTO.getIs_manager());
             save(one);
             one.setPassword(null);
         } else {
