@@ -35,16 +35,22 @@ public class EquipmentController {
      * @param equipmentDTO
      * @return id
      */
+    //fixme: post为什么还要create?
     @PostMapping("/create")
     public Result createEquipment(@RequestBody EquipmentDTO equipmentDTO) {
+        //fixme: create怎么可以用指定的ID呢，现在是前端指定啥ID就啥ID
         // todo: 要保证哪些字段不空？
         if(StringUtils.isBlank(equipmentDTO.getName())||StringUtils.isBlank(equipmentDTO.getCategory())
                 ||StringUtils.isBlank(equipmentDTO.getNumber())){
             return Result.failure(ErrorReport.RequestParameterError.CODE, ErrorReport.RequestParameterError.MESSAGE);
-        } else {
-            Equipment equipment = copyProperties(equipmentDTO);
-            equipmentService.save(equipment);
-            return Result.success(equipment.getId());
+        }
+        else {
+            Equipment equipment = new Equipment(equipmentDTO);
+            //should handle failures
+            if(equipmentService.save(equipment)) {
+                return Result.success(equipment.getId());
+            }
+            return Result.failure(ErrorReport.RecordCreateError.CODE, ErrorReport.RecordCreateError.MESSAGE);
         }
     }
 
@@ -90,7 +96,7 @@ public class EquipmentController {
      */
     @PutMapping("/update")
     public Result updateEquipment(@RequestBody EquipmentDTO equipmentDTO) {
-        Equipment equipment = copyProperties(equipmentDTO);
+        Equipment equipment = new Equipment(equipmentDTO);
         Equipment one = equipmentService.getById(equipment.getId());
         if(one == null) {
             return Result.failure(ErrorReport.RequestParameterError.CODE, ErrorReport.RequestParameterError.MESSAGE);
@@ -109,7 +115,13 @@ public class EquipmentController {
      */
     @DeleteMapping("/{id}")
     public Result deleteEquipment(@PathVariable Integer id) {
-        return Result.success(equipmentService.removeById(id));
+
+        if(!equipmentService.removeById(id)) {
+            return Result.failure(ErrorReport.RecordRemoveError.CODE, ErrorReport.RecordRemoveError.MESSAGE);
+        }
+        else {
+            return Result.success(true);
+        }
     }
 
 
@@ -171,12 +183,4 @@ public class EquipmentController {
     }
 
 
-    /**
-     * 把equipmentDTO的属性copy到Equipment实例
-     * @param equipmentDTO
-     * @return Equipment实例
-     */
-    private Equipment copyProperties(EquipmentDTO equipmentDTO) {
-        return new Equipment(equipmentDTO);
-    }
 }

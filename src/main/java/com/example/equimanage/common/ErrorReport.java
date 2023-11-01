@@ -12,4 +12,12 @@ public class ErrorReport {
         public static String CODE = ResultStatus.CODE_400;
         public static String MESSAGE = "Invalid Parameters";
     }
+    public static class RecordCreateError {
+        public static String CODE = ResultStatus.CODE_400;
+        public static String MESSAGE = "Fail to save the requested item to the database";
+    }
+    public static class RecordRemoveError {
+        public static String CODE = ResultStatus.CODE_400;
+        public static String MESSAGE = "Fail to remove the requested item from the database";
+    }
 }
