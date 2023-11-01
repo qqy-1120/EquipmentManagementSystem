@@ -4,18 +4,20 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.example.equimanage.common.Constants;
+
 import com.example.equimanage.common.Result;
+import com.example.equimanage.common.ErrorReport;
 import com.example.equimanage.pojo.DTO.EquipmentDTO;
 import com.example.equimanage.pojo.Equipment;
 import com.example.equimanage.service.EquipmentService;
-import io.swagger.v3.oas.models.security.SecurityScheme;
 import jakarta.annotation.Resource;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.List;
+
+
 
 @RestController
 @RequestMapping("/api/equipment")
@@ -38,7 +40,7 @@ public class EquipmentController {
         // todo: 要保证哪些字段不空？
         if(StringUtils.isBlank(equipmentDTO.getName())||StringUtils.isBlank(equipmentDTO.getCategory())
                 ||StringUtils.isBlank(equipmentDTO.getNumber())){
-            return Result.failure(Constants.CODE_400, "参数不足");
+            return Result.failure(ErrorReport.RequestParameterError.CODE, ErrorReport.RequestParameterError.MESSAGE);
         } else {
             Equipment equipment=copyProperties(equipmentDTO);
             equipmentService.save(equipment);
@@ -91,7 +93,7 @@ public class EquipmentController {
         Equipment equipment = copyProperties(equipmentDTO);
         Equipment one = equipmentService.getById(equipment.getId());
         if(one == null) {
-            return Result.failure(Constants.CODE_400, "参数错误");
+            return Result.failure(ErrorReport.RequestParameterError.CODE, ErrorReport.RequestParameterError.MESSAGE);
         }
         else {
             equipmentService.updateById(equipment);
