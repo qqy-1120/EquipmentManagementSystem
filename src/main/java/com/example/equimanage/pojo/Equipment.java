@@ -6,6 +6,8 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.util.Date;
+
+import com.example.equimanage.pojo.DTO.EquipmentDTO;
 import lombok.Data;
 
 /**
@@ -107,4 +109,20 @@ public class Equipment implements Serializable {
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
+
+
+    public Equipment(EquipmentDTO equipmentDTO) {
+        this.setId(equipmentDTO.getId()); // 需要考虑为空
+        this.setName(equipmentDTO.getName());
+        this.setCategory(equipmentDTO.getCategory());
+        this.setBuy_time(equipmentDTO.getBuy_time());
+        this.setNumber(equipmentDTO.getNumber());
+        this.setState(equipmentDTO.getState());
+        this.setIs_receive(equipmentDTO.getIs_receive());
+        this.setReceive_time(equipmentDTO.getReceive_time());
+        this.setUser_id(equipmentDTO.getUser_id());
+        this.setUsername(equipmentDTO.getUsername());
+        this.setLocation(equipmentDTO.getLocation());
+        this.setConfiguration(equipmentDTO.getConfiguration());
+    }
 }

@@ -42,7 +42,7 @@ public class EquipmentController {
                 ||StringUtils.isBlank(equipmentDTO.getNumber())){
             return Result.failure(ErrorReport.RequestParameterError.CODE, ErrorReport.RequestParameterError.MESSAGE);
         } else {
-            Equipment equipment=copyProperties(equipmentDTO);
+            Equipment equipment = copyProperties(equipmentDTO);
             equipmentService.save(equipment);
             return Result.success(equipment.getId());
         }
@@ -177,19 +177,6 @@ public class EquipmentController {
      * @return Equipment实例
      */
     private Equipment copyProperties(EquipmentDTO equipmentDTO) {
-        Equipment equipment = new Equipment();
-        equipment.setId(equipmentDTO.getId()); // 需要考虑为空
-        equipment.setName(equipmentDTO.getName());
-        equipment.setCategory(equipmentDTO.getCategory());
-        equipment.setBuy_time(equipmentDTO.getBuy_time());
-        equipment.setNumber(equipmentDTO.getNumber());
-        equipment.setState(equipmentDTO.getState());
-        equipment.setIs_receive(equipmentDTO.getIs_receive());
-        equipment.setReceive_time(equipmentDTO.getReceive_time());
-        equipment.setUser_id(equipmentDTO.getUser_id());
-        equipment.setUsername(equipmentDTO.getUsername());
-        equipment.setLocation(equipmentDTO.getLocation());
-        equipment.setConfiguration(equipmentDTO.getConfiguration());
-        return equipment;
+        return new Equipment(equipmentDTO);
     }
 }
