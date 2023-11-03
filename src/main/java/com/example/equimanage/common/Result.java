@@ -21,10 +21,15 @@ public class Result {
     }
 
     public static Result success(Object data) {
-        return new Result(Constants.CODE_200, "", data);
+        return new Result(Constants.CODE_200, "HTTP OK", data);
     }
 
     public static Result failure(String code, String message) {
         return new Result(code, message, null);
+    }
+    public static Result failure(Response response) {
+        //fixme: security hole, should be fixed!
+        //用户操作连续错3/5/10次之类的，就应该block他五分钟或者一天之类的，然后后台写安全日志
+        return new Result(response.getCode(), response.getMessage(),null);
     }
 }

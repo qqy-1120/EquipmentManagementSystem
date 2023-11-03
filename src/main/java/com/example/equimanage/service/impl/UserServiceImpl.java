@@ -3,7 +3,8 @@ package com.example.equimanage.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.equimanage.common.Constants;
-import com.example.equimanage.exception.ServiceException;
+import com.example.equimanage.common.Response;
+import com.example.equimanage.exception.RequestHandlingException;
 import com.example.equimanage.pojo.DTO.UserDTO;
 import com.example.equimanage.pojo.User;
 import com.example.equimanage.service.UserService;
@@ -26,16 +27,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
     @Override
     public User login(UserDTO userDTO) {
+        //fixme: should we handle exceptions during findUserByName???
         User userWithPwd = userMapper.findUserByName(userDTO.getUsername());
-
         if(userWithPwd == null) {
-            throw new ServiceException(Constants.CODE_401, "用户名错误");
+            throw new RequestHandlingException(new Response.UsernameError());
         }
-
         BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
-
         if(!bCryptPasswordEncoder.matches(userDTO.getPassword(),userWithPwd.getPassword())) {
-            throw new ServiceException(Constants.CODE_401, "密码错误");
+            throw new RequestHandlingException(new Response.PasswordWrongError());
         } else {
             userWithPwd.setPassword(null);
             return userWithPwd;
@@ -50,11 +49,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
             one.setUsername(userDTO.getUsername());
             one.setPassword(bCryptPasswordEncoder.encode(userDTO.getPassword()));
+            //fixme: 是不是应该鉴权：不能人人注册为管理员吧？
             one.setIs_manager(userDTO.getIs_manager());
+            //fixme: should we handle exceptions during saving??
             save(one);
             one.setPassword(null);
         } else {
-            throw new ServiceException(Constants.CODE_401, "用户已存在");
+            throw new RequestHandlingException(new Response.UserAlreadyExistsError());
         }
         return one;
     }
@@ -72,13 +73,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         try {
             one = getOne(queryWrapper);
         } catch (Exception e) {
-            throw new ServiceException(Constants.CODE_500, "系统错误");
+            throw new RequestHandlingException(new Response.InternalServerError(Constants.ErrorCode.GETUSERINFO_SERVICE));
         }
-        if(one == null)
-            return null;
-        else {
-            return one;
-        }
+        return one;
     }
 }
 

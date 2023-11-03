@@ -5,8 +5,9 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
+import com.example.equimanage.common.Response;
 import com.example.equimanage.common.Result;
-import com.example.equimanage.common.ErrorReport;
+import com.example.equimanage.exception.RequestHandlingException;
 import com.example.equimanage.pojo.DTO.EquipmentDTO;
 import com.example.equimanage.pojo.Equipment;
 import com.example.equimanage.service.EquipmentService;
@@ -38,19 +39,19 @@ public class EquipmentController {
     //fixme: post为什么还要create?
     @PostMapping("/create")
     public Result createEquipment(@RequestBody EquipmentDTO equipmentDTO) {
-        //fixme: create怎么可以用指定的ID呢，现在是前端指定啥ID就啥ID
-        // todo: 要保证哪些字段不空？
+        //fixme: create怎么可以用指定的ID呢，现在是前端指定啥ID就啥ID？？
+        // todo: 要保证哪些字段不空？ 一般要把sanity check单独放到一个函数里
         if(StringUtils.isBlank(equipmentDTO.getName())||StringUtils.isBlank(equipmentDTO.getCategory())
                 ||StringUtils.isBlank(equipmentDTO.getNumber())){
-            return Result.failure(ErrorReport.RequestParameterError.CODE, ErrorReport.RequestParameterError.MESSAGE);
+            throw new RequestHandlingException(new Response.RequestParameterError());
         }
         else {
             Equipment equipment = new Equipment(equipmentDTO);
-            //should handle failures
+            //fixme: should we handle exceptions?
             if(equipmentService.save(equipment)) {
                 return Result.success(equipment.getId());
             }
-            return Result.failure(ErrorReport.RecordCreateError.CODE, ErrorReport.RecordCreateError.MESSAGE);
+            throw new RequestHandlingException(new Response.RecordCreateError());
         }
     }
 
@@ -64,6 +65,7 @@ public class EquipmentController {
      */
     @PostMapping("/upload/{id}")
     public Result uploadImage(@PathVariable Integer id, @RequestParam MultipartFile file) throws IOException {
+        //fixme: IOException谁处理，能正确处理吗？
         return Result.success(equipmentService.uploadById(id, file));
     }
 
@@ -97,11 +99,13 @@ public class EquipmentController {
     @PutMapping("/update")
     public Result updateEquipment(@RequestBody EquipmentDTO equipmentDTO) {
         Equipment equipment = new Equipment(equipmentDTO);
+        //fixme: 是不是应该处理数据库的exception
         Equipment one = equipmentService.getById(equipment.getId());
         if(one == null) {
-            return Result.failure(ErrorReport.RequestParameterError.CODE, ErrorReport.RequestParameterError.MESSAGE);
+            return Result.failure(new Response.RequestParameterError());
         }
         else {
+            //fixme: 是不是应该处理数据库的exception
             equipmentService.updateById(equipment);
             return Result.success(equipment.getId());
         }
@@ -115,9 +119,9 @@ public class EquipmentController {
      */
     @DeleteMapping("/{id}")
     public Result deleteEquipment(@PathVariable Integer id) {
-
+        //fixme: 是不是应该处理数据库的exception
         if(!equipmentService.removeById(id)) {
-            return Result.failure(ErrorReport.RecordRemoveError.CODE, ErrorReport.RecordRemoveError.MESSAGE);
+            return Result.failure(new Response.RecordRemoveError());
         }
         else {
             return Result.success(true);
@@ -133,7 +137,7 @@ public class EquipmentController {
      */
     @GetMapping("/page/{pageNum}/{pageSize}")
     public Result findByPage(@PathVariable Integer pageNum, @PathVariable Integer pageSize) {
-
+        //fixme: 是不是应该处理数据库的exception
         IPage<Equipment> page = new Page<>(pageNum, pageSize);
         return Result.success(equipmentService.page(page));
     }

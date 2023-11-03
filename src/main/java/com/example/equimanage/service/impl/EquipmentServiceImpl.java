@@ -3,7 +3,8 @@ package com.example.equimanage.service.impl;
 import cn.hutool.core.util.IdUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.equimanage.common.Constants;
-import com.example.equimanage.exception.ServiceException;
+import com.example.equimanage.common.Response;
+import com.example.equimanage.exception.RequestHandlingException;
 import com.example.equimanage.pojo.Equipment;
 import com.example.equimanage.service.EquipmentService;
 import com.example.equimanage.mapper.EquipmentMapper;
@@ -40,10 +41,12 @@ public class EquipmentServiceImpl extends ServiceImpl<EquipmentMapper, Equipment
     @Override
     public String uploadById(Integer id, MultipartFile file) throws IOException {
         // id和uploadpath存在
+        //fixme: should we handle exceptions during selectById???
         Equipment one = equipmentMapper.selectById(id);
-        if(one == null||file.equals("")) throw new ServiceException(Constants.CODE_400, "参数错误");
+        if(one == null||file.equals("")) throw new RequestHandlingException(new Response.RequestParameterError());
         File uploadFileDir = new File(imgUploadPath);
         if(!uploadFileDir.exists()) {
+            //fixme: this should not happen, when it happens, it is an internal error
             uploadFileDir.mkdirs();
         }
 
@@ -53,7 +56,7 @@ public class EquipmentServiceImpl extends ServiceImpl<EquipmentMapper, Equipment
 
         // 检查文件是否为支持的图片格式
         if (!SUPPORTED_IMAGE_EXTENSIONS.contains(fileExtension.toLowerCase())) {
-            throw new ServiceException(Constants.CODE_400, "文件格式不符");
+            throw new RequestHandlingException(new Response.UnsupportedFileFormatError());
         }
         // 定义一个文件唯一的标识码
         String uuid = IdUtil.fastSimpleUUID();
@@ -64,8 +67,11 @@ public class EquipmentServiceImpl extends ServiceImpl<EquipmentMapper, Equipment
         file.transferTo(uploadFile);
 
         // 存入数据库
+        //fixme:不要写死！！！ 存储功能和service无关，应该定义在common util下面
         String url = "https://10.177.44.94:"+port+"/upload/"+fileUUID;
+
         one.setPhoto_url(url);
+        //fixme: should we handle exceptions during updateById???
         equipmentMapper.updateById(one);
         return url;
     }
