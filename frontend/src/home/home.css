@@ -1,0 +1,59 @@
+.home {
+  font-family: sans-serif;
+  text-align: center;
+  width: 90%;
+  margin-left: 5%;
+  padding-top: 40px;
+}
+
+/* .editable-row .ant-form-item-explain {
+    position: absolute;
+    top: 100%;
+    font-size: 12px;
+  } */
+.shallow {
+  background-color: white !important;
+}
+
+.deep {
+  background-color: rgb(245, 245, 245) !important;
+}
+
+.ant-table-thead>tr>th.dark {
+  color: white !important;
+  background: #36304A !important;
+}
+
+/* td.ant-table-cell.light.ant-table-column-sort {
+  background-color: transparent;
+} */
+
+td.ant-table-cell.dark.ant-table-column-sort {
+  background-color: transparent;
+}
+
+/* .ant-table-thead>tr>th.light {
+  color: white !important;
+  background: #69C4A0 !important;
+} */
+
+th.ant-table-cell.light::before {
+  width: 0px !important;
+}
+.ant-table-column-sorter-inner{
+  color: white !important;
+}
+.anticon.anticon-filter{
+  color: white !important;
+}
+th.ant-table-cell.dark::before {
+  width: 0px !important;
+}
+
+.ant-table {
+  box-shadow: 0px 2px 4px #F8F8F8;
+}
+
+.addBtn {
+  margin-bottom: 1%;
+}
