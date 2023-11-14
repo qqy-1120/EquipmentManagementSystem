@@ -10,7 +10,7 @@ import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/location")
+@RequestMapping("/api")
 public class LocationController {
 
     @Resource
@@ -22,7 +22,7 @@ public class LocationController {
      * @param location
      * @return 状态码&错误信息
      */
-    @PostMapping("/create")
+    @PostMapping("/location")
     public Result createLocation(@RequestParam String location) {
         if(StringUtils.isBlank(location)) return Result.failure(Constants.CODE_400, "位置为空");
         else {
@@ -45,14 +45,14 @@ public class LocationController {
      * @param location_id
      * @return 状态码&错误信息
      */
-    @DeleteMapping("/{location_id}")
+    @DeleteMapping("/location/{location_id}")
     public Result deleteLocation(@PathVariable Integer location_id) {
         if(locationService.removeById(location_id)) return Result.success();
         else return Result.failure(Constants.CODE_500, "服务器错误");
     }
 
 
-    @GetMapping("/list")
+    @GetMapping("/locations")
     public Result findAll() {
         return Result.success(locationService.list());
     }

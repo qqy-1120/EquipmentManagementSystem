@@ -33,6 +33,9 @@ public class EquipmentServiceImpl extends ServiceImpl<EquipmentMapper, Equipment
     @Value("${server.port}")
     private String port;
 
+    @Value("${imgAddressPrefix}")
+    private String adr;
+
     @Resource
     private EquipmentMapper equipmentMapper;
 
@@ -67,8 +70,9 @@ public class EquipmentServiceImpl extends ServiceImpl<EquipmentMapper, Equipment
         file.transferTo(uploadFile);
 
         // 存入数据库
-        //fixme:不要写死！！！ 存储功能和service无关，应该定义在common util下面
-        String url = "https://10.177.44.94:"+port+"/upload/"+fileUUID;
+        // fixme:不要写死！！！ 存储功能和service无关，应该定义在common util下面
+        // fixed
+        String url = adr+":"+port+"/img/"+fileUUID;
 
         one.setPhoto_url(url);
         //fixme: should we handle exceptions during updateById???

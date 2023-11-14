@@ -7,11 +7,15 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.util.Date;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.BeanUtils;
 
 /**
  * 
  * @TableName user
  */
+@NoArgsConstructor
 @TableName(value ="user")
 @Data
 public class User implements Serializable {
@@ -47,4 +51,8 @@ public class User implements Serializable {
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
+
+    public User(User user) {
+        BeanUtils.copyProperties(user,this);
+    }
 }

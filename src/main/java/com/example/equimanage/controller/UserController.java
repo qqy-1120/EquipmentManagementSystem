@@ -12,6 +12,7 @@ import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RequestMapping("/api")
 @RestController
@@ -25,7 +26,7 @@ public class UserController {
             throw new RequestHandlingException(new Response.RequestParameterError());
         }
         else {
-            User res = userService.login(userDTO);
+            Map<String,String> res = userService.login(userDTO);
             if(res == null) {
                 //normally, we will not reach this block
                 throw new RequestHandlingException(new Response.InternalServerError(Constants.ErrorCode.LOGIN_CONTROLLER));
@@ -58,7 +59,15 @@ public class UserController {
 
     }
 
-    @GetMapping("/user/list")
+    @PostMapping("/logout")
+    public Result logout() {
+        String result = userService.logout();
+        if(StringUtils.isEmpty(result))
+            return Result.success();
+        else return Result.failure(new Response.LogoutFailedError());
+    }
+
+    @GetMapping("/users")
     public Result findAll() {
         //fixme: 一定要鉴权！鉴权！鉴权！
         List res = userService.list();

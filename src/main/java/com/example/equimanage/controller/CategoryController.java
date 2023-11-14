@@ -10,7 +10,7 @@ import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/category")
+@RequestMapping("/api")
 public class CategoryController {
 
     @Resource
@@ -22,7 +22,7 @@ public class CategoryController {
      * @param category
      * @return 状态码&错误信息
      */
-    @PostMapping("/create")
+    @PostMapping("/category")
     public Result createCategory(@RequestParam String category) {
         if(StringUtils.isBlank(category)) return Result.failure(Constants.CODE_400, "类别为空");
         else {
@@ -45,7 +45,7 @@ public class CategoryController {
      * @param category_id
      * @return 状态码&错误信息
      */
-    @DeleteMapping("/{category_id}")
+    @DeleteMapping("/category/{category_id}")
     public Result deleteCategory(@PathVariable Integer category_id) {
         if(categoryService.removeById(category_id)) return Result.success();
         else return Result.failure(Constants.CODE_500, "服务器错误");
@@ -56,7 +56,7 @@ public class CategoryController {
      * 查询所有类别
      * @return 类别List
      */
-    @GetMapping("/list")
+    @GetMapping("/categories")
     public Result findAll() {
         return Result.success(categoryService.list());
     }
