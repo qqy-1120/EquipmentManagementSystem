@@ -1,19 +1,22 @@
 import { Form, Image, Upload, Badge, DatePicker, Input, Popconfirm, Table, Select, Divider, Space, Row, Col, Tag, Tooltip, Button, message } from 'antd';
-import { PlusOutlined,UploadOutlined } from '@ant-design/icons';
+import { PlusOutlined } from '@ant-design/icons';
 import { useState, useRef, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import './home.css';
-import { state, classfyInput, selectStateOptions,fallback } from './config.js';
+import { state, classfyInput, selectStateOptions,fallback } from './components/config';
 import { updateEquipment, getSelectEquipments, addEquipment, uploadPhoto, getLocationsList, getEquipmentList, deleteEquipment, getCategoriesList, addCategory, getUsers, addLocation } from './service';
 import dayjs from 'dayjs';
-
 const { TextArea } = Input;
-const uploadButton = (
+// const uploadButton = (
+//     <div>
+//         <Button icon={<UploadOutlined />}>上传</Button>
+//     </div>
+// );
+const uploadTip=(
     <div>
-        <Button icon={<UploadOutlined />}>上传</Button>
+        <a>上传</a>
     </div>
-);
-
+)
 const Home = () => {
     const location = useLocation();
     const { user_id, is_manager, username } = location.state;
@@ -112,9 +115,9 @@ const Home = () => {
         const ctgInputRef = useRef(null);
         const [newLocation, setNewLocation] = useState('');
         const locaInputRef = useRef(null);
-        let inputNode = <Input />;
+        let inputNode = <Input style={{width:100}} />;
         if (inputType === 'textArea') {
-            inputNode = <TextArea autoSize={{ minRows: 1, maxRows: 3 }} />;
+            inputNode = <TextArea style={{width:100}} autoSize={{ minRows: 1, maxRows: 3 }} />;
         }
         else if (inputType === 'upload') {
             const beforeUpload = (file) => {
@@ -142,15 +145,17 @@ const Home = () => {
                 showUploadList: false,
                 fileList: [],
             };
-            inputNode =<Upload
+            inputNode =<div className='inputPhoto'>
+                <div style={{display:'inline-block',verticalAlign:'middle'}}>{imageUrl&&<Image src={imageUrl} alt="pic" style={{ width: '20px' }} />}</div>
+            <div style={{display:'inline-block'}}><Upload
             {...props}
             name="avatar"
-            // listType="picture-card"
             className="avatar-uploader"
             showUploadList={false}
         >
-            {imageUrl? <Image src={imageUrl} alt="avatar" style={{ width: '20px' }} />:uploadButton}           
-        </Upload>}
+            {uploadTip}           
+        </Upload></div>
+        </div>}
         else if (inputType === 'selectState') {
             inputNode = <Select
                 defaultValue="闲置"
@@ -177,7 +182,7 @@ const Home = () => {
             };
             inputNode = <Select
                 style={{
-                    width: 240,
+                    width: 140,
                 }}
                 placeholder="输入位置"
                 dropdownRender={(menu) => (
@@ -186,13 +191,12 @@ const Home = () => {
                         <Divider style={{ margin: '8px 0', }} />
                         <Space style={{ padding: '0 8px 4px', }}>
                             <Input
-                                placeholder="输入位置"
+                                placeholder="新位置"
                                 ref={locaInputRef}
                                 value={newLocation}
                                 onChange={onNameChange}
                             />
                             <Button type="text" icon={<PlusOutlined />} onClick={addItem}>
-                                添加新位置
                             </Button>
                         </Space>
                     </>
@@ -219,7 +223,7 @@ const Home = () => {
             }
             inputNode = <Select
                 style={{
-                    width: 240,
+                    width: 145,
                 }}
                 placeholder="选择类别"
                 dropdownRender={(menu) => (
@@ -228,14 +232,13 @@ const Home = () => {
                         <Divider style={{ margin: '8px 0', }} />
                         <Space style={{ padding: '0 8px 4px', }}>
                             <Input
-                                placeholder="输入类别"
+                                placeholder="新类别"
                                 ref={ctgInputRef}
                                 value={newCategory}
                                 onChange={onNameChange}
                                 onKeyDown={(e) => e.stopPropagation()}
                             />
                             <Button type="text" icon={<PlusOutlined />} onClick={addItem}>
-                                添加类别
                             </Button>
                         </Space>
                     </>
@@ -248,7 +251,7 @@ const Home = () => {
         }
         else if (inputType === 'DatePicker') {
             inputNode = <DatePicker 
-            style={{width:125}}/>
+            style={{width:130}}/>
         }
         return (
             <td {...restProps}>
@@ -359,21 +362,23 @@ const Home = () => {
         setData(equipmentList);
     }
 
-
     const columns = [{
         title: '名称',
         dataIndex: 'name',
         key: 'name',
+        width: 150,
         editable: true,
         sorter:(a, b) => {
             return a.name.localeCompare(b.name);
         },
-        className:'dark'
+        className:'dark',
+        fixed: 'left'
     },
     {
         title: '类别',
         dataIndex: 'category',
         className:'dark',
+        width: 170,
         filters: categories.map((item) => { return { text: item, value: item } }),
         sorter:(a, b) => {
             return a.category.localeCompare(b.category);
@@ -381,11 +386,13 @@ const Home = () => {
         filterSearch: true,
         key: 'category',
         editable: true,
+        fixed: 'left'
     },
     {
-        title: '国有资产编号',
+        title: '资产编号',
         dataIndex: 'number',
         key: 'number',
+        // width: 150,
         editable: true,
         sorter:(a, b) => {
             return a.number.localeCompare(b.number);
@@ -394,6 +401,7 @@ const Home = () => {
     }, {
         title: '购入时间',
         dataIndex: 'buy_time',
+        width:200,
         className:'dark',
         sorter: (a, b) => {
             return a.buy_time - b.buy_time;
@@ -406,8 +414,9 @@ const Home = () => {
         editable: true,
     },
     {
-        title: '当前使用者',
+        title: '使用者',
         dataIndex: 'username',
+        // width: 150,
         filters: userFilter,
         filterSearch: true,
         sorter:(a, b) => {
@@ -435,6 +444,7 @@ const Home = () => {
         dataIndex: 'state',
         key: 'state',
         className:'dark',
+        width: 130,
         sorter:(a, b) => {
             return a.state-b.state;
         },
@@ -455,6 +465,7 @@ const Home = () => {
         dataIndex: 'location',
         className:'dark',
         key: 'location',
+        width:160,
         sorter:(a, b) => {
             if(!a.location) a.location='';
             if(!b.location) b.location='';
@@ -476,21 +487,8 @@ const Home = () => {
         dataIndex: 'photo_url',
         key: 'photo_url',
         required: false,
+        // width: 120,
         render: photo_url => {
-
-            // return <div onClick={()=>{
-            //     viewImage(photo_url)
-            // }}> <FileImageOutlined /></div>
-            console.log(photo_url,'photo_url')
-           
-            // return photo_url?<Image
-            //     width={20}
-            //     src={photo_url}/>:
-            //     <Image
-            //     src="error"
-            //     width={20}
-            //     fallback={fallback}
-            // />
             return <Image
             width={20}
             fallback={fallback}
@@ -504,6 +502,8 @@ const Home = () => {
         title: '操作',
         dataIndex: 'operation',
         className:'dark',
+        width: 150,
+        fixed: 'right',
         render: (text, record) => {
             const editable = isEditing(record);
             return is_manager === 1 ? editable ? (<span>
@@ -567,6 +567,7 @@ const Home = () => {
             }),
         };
     });
+
     const onTableChange = async (pagination, filters, sorter) => {
         try {
             if (!filters.category && !filters.state && !filters.location && !filters.username) {
@@ -621,18 +622,19 @@ const Home = () => {
                     </Row>
                 </div>}
                 <Table
-                    components={{
-                        body: {
+                    components={
+                      {  body: {
                             cell: EditableCell,
-                        },
-                    }}
+                        },}
+                    }                  
                     bordered={false}
                     dataSource={data}
                     onChange={onTableChange}
                     columns={mergedColumns}
-                    // rowClassName="editable-row"
+                    scroll={{
+                        x:window.screen.width,
+                    }}
                     rowClassName={(record,index)=>{
-                        console.log(index,'index')
                         let className=index%2?'deep':'shallow';
                         return className
                     }}

@@ -5,18 +5,16 @@
   margin-left: 5%;
   padding-top: 40px;
 }
-
-/* .editable-row .ant-form-item-explain {
-    position: absolute;
-    top: 100%;
-    font-size: 12px;
-  } */
-.shallow {
+.shallow,
+tr.ant-table-row.ant-table-row-level-0.shallow td.ant-table-cell.dark.ant-table-column-sort.ant-table-cell-fix-left,
+tr.ant-table-row.ant-table-row-level-0.shallow td.ant-table-cell.dark.ant-table-column-sort{
   background-color: white !important;
 }
-
-.deep {
-  background-color: rgb(245, 245, 245) !important;
+.ant-table-filter-trigger {
+  margin: 0 !important;
+}
+:where(.css-dev-only-do-not-override-htwhyh).ant-table-wrapper .ant-table-tbody >tr >th, :where(.css-dev-only-do-not-override-htwhyh).ant-table-wrapper .ant-table-tbody >tr >td{
+  border-bottom: 0;
 }
 
 .ant-table-thead>tr>th.dark {
@@ -24,36 +22,30 @@
   background: #36304A !important;
 }
 
-/* td.ant-table-cell.light.ant-table-column-sort {
-  background-color: transparent;
-} */
-
-td.ant-table-cell.dark.ant-table-column-sort {
-  background-color: transparent;
-}
-
-/* .ant-table-thead>tr>th.light {
-  color: white !important;
-  background: #69C4A0 !important;
-} */
-
-th.ant-table-cell.light::before {
+th.ant-table-cell.light::before,th.ant-table-cell.dark::before {
   width: 0px !important;
 }
-.ant-table-column-sorter-inner{
+.ant-table-column-sorter-inner,.anticon.anticon-filter{
   color: white !important;
 }
-.anticon.anticon-filter{
-  color: white !important;
+tr.ant-table-row.ant-table-row-level-0.shallow td.ant-table-cell.dark.ant-table-cell-fix-left.ant-table-cell-row-hover, 
+tr.ant-table-row.ant-table-row-level-0.shallow td.ant-table-cell.dark.ant-table-cell-row-hover{
+  background-color: white !important;
 }
-th.ant-table-cell.dark::before {
-  width: 0px !important;
+::-webkit-scrollbar{
+  display: none;
 }
-
+.deep,
+tr.ant-table-row.ant-table-row-level-0.deep td.ant-table-cell.dark.ant-table-cell-fix-left, 
+tr.ant-table-row.ant-table-row-level-0.deep td.ant-table-cell.dark.ant-table-cell-row-hover,
+tr.ant-table-row.ant-table-row-level-0.deep td.ant-table-cell.dark.ant-table-cell-fix-right.ant-table-cell-fix-right-first,
+tr.ant-table-row.ant-table-row-level-0.deep td.ant-table-cell.dark.ant-table-column-sort{
+  background-color: rgb(245, 245, 245) !important;
+}
 .ant-table {
   box-shadow: 0px 2px 4px #F8F8F8;
 }
 
 .addBtn {
-  margin-bottom: 1%;
+  margin-bottom: 20px;
 }
