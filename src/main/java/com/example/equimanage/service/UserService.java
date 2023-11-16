@@ -4,6 +4,8 @@ import com.example.equimanage.pojo.DTO.UserDTO;
 import com.example.equimanage.pojo.User;
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import java.util.Map;
+
 /**
 * @author qqy
 * @description 针对表【user】的数据库操作Service
@@ -11,7 +13,9 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface UserService extends IService<User> {
 
-    User login(UserDTO userDTO);
+    Map<String,String> login(UserDTO userDTO);
 
     User register(UserDTO userDTO);
+
+    String logout();
 }

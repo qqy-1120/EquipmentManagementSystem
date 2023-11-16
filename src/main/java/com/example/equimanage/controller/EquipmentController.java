@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
+import com.example.equimanage.common.Constants;
 import com.example.equimanage.common.Response;
 import com.example.equimanage.common.Result;
 import com.example.equimanage.exception.RequestHandlingException;
@@ -21,7 +22,7 @@ import java.util.List;
 
 
 @RestController
-@RequestMapping("/api/equipment")
+@RequestMapping("/api")
 public class EquipmentController {
 
     @Resource
@@ -37,7 +38,8 @@ public class EquipmentController {
      * @return id
      */
     //fixme: post为什么还要create?
-    @PostMapping("/create")
+    // fixed
+    @PostMapping("/equipment")
     public Result createEquipment(@RequestBody EquipmentDTO equipmentDTO) {
         //fixme: create怎么可以用指定的ID呢，现在是前端指定啥ID就啥ID？？
         // todo: 要保证哪些字段不空？ 一般要把sanity check单独放到一个函数里
@@ -63,7 +65,7 @@ public class EquipmentController {
      * @return 图片url
      * @throws IOException
      */
-    @PostMapping("/upload/{id}")
+    @PostMapping("/equipment/image/{id}")
     public Result uploadImage(@PathVariable Integer id, @RequestParam MultipartFile file) throws IOException {
         //fixme: IOException谁处理，能正确处理吗？
         return Result.success(equipmentService.uploadById(id, file));
@@ -96,7 +98,7 @@ public class EquipmentController {
      * @param equipmentDTO
      * @return id
      */
-    @PutMapping("/update")
+    @PutMapping("/equipment")
     public Result updateEquipment(@RequestBody EquipmentDTO equipmentDTO) {
         Equipment equipment = new Equipment(equipmentDTO);
         //fixme: 是不是应该处理数据库的exception
@@ -117,7 +119,7 @@ public class EquipmentController {
      * @param id
      * @return 1 or 0
      */
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/equipment/{id}")
     public Result deleteEquipment(@PathVariable Integer id) {
         //fixme: 是不是应该处理数据库的exception
         if(!equipmentService.removeById(id)) {
@@ -135,7 +137,7 @@ public class EquipmentController {
      * @param pageSize
      * @return 设备list
      */
-    @GetMapping("/page/{pageNum}/{pageSize}")
+    @GetMapping("/equipment/page/{pageNum}/{pageSize}")
     public Result findByPage(@PathVariable Integer pageNum, @PathVariable Integer pageSize) {
         //fixme: 是不是应该处理数据库的exception
         IPage<Equipment> page = new Page<>(pageNum, pageSize);
@@ -150,7 +152,7 @@ public class EquipmentController {
      * @param
      * @return 设备list
      */
-    @GetMapping("/querypage/{pageNum}/{pageSize}")
+    @GetMapping("/equipment/querypage/{pageNum}/{pageSize}")
     public Result findByPage(@PathVariable Integer pageNum, @PathVariable Integer pageSize, @RequestParam(required = false) List<String> categories,
                              @RequestParam(required = false) List<String> usernames, @RequestParam(required = false) List<Integer> states,
                              @RequestParam(required = false) List<String> locations) {
@@ -168,22 +170,19 @@ public class EquipmentController {
         if(locations != null && !locations.isEmpty()) {
             wrapper.in("location", locations);
         }
-//        if(!StringUtils.isBlank(category)) {
-//            wrapper.eq("category", category);
-//        }
-//        if(!StringUtils.isBlank(username)){
-//            wrapper.like("username", username);
-//        }
-//        if(state != null){
-//            wrapper.eq("state", state);
-//        }
-//        if(!StringUtils.isBlank(location)){
-//            wrapper.eq("location", location);
-//        }
         wrapper.orderByAsc("state");
         wrapper.orderByAsc("receive_time");
 
         return Result.success(equipmentService.page(page,wrapper));
+    }
+
+    @GetMapping("/equipments")
+    public Result findAll(){
+        List res = equipmentService.list();
+        if(res == null) {
+            throw new RequestHandlingException(new Response.InternalServerError(Constants.ErrorCode.GETUSERINFO_SERVICE));
+        }
+        return Result.success(res);
     }
 
 
