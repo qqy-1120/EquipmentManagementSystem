@@ -3,20 +3,17 @@ import { PlusOutlined } from '@ant-design/icons';
 import { useState, useRef, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import './home.css';
-import { state, classfyInput, selectStateOptions,fallback } from './components/config';
-import { updateEquipment, getSelectEquipments, addEquipment, uploadPhoto, getLocationsList, getEquipmentList, deleteEquipment, getCategoriesList, addCategory, getUsers, addLocation } from './service';
+import { state, classfyInput, selectStateOptions, fallback } from './components/config';
+import { updateEquipment, getSelectEquipments, addEquipment, uploadPhoto, getEquipmentList, deleteEquipment, getFilters, addItems } from './service';
 import dayjs from 'dayjs';
 const { TextArea } = Input;
-// const uploadButton = (
-//     <div>
-//         <Button icon={<UploadOutlined />}>上传</Button>
-//     </div>
-// );
-const uploadTip=(
+const uploadTip = (
     <div>
         <a>上传</a>
     </div>
 )
+//TODO:重构
+
 const Home = () => {
     const location = useLocation();
     const { user_id, is_manager, username } = location.state;
@@ -35,17 +32,17 @@ const Home = () => {
         setData(equipmentList);
     }
     const getUserList = async () => {
-        const username = await getUsers();
+        const username = await getFilters('user');
         const filter = username.map((item) => { return { text: item, value: item } });
         setUserFilter(filter);
     }
     const getCategories = async () => {
-        const categoryList = await getCategoriesList();
+        const categoryList = await getFilters('category');
         const cateArray = categoryList.map((item) => { return item.category });
         setCategories(cateArray);
     };
     const getLocations = async () => {
-        const locationsList = await getLocationsList();
+        const locationsList = await getFilters('location');
         const locations = locationsList.map((item) => { return item.location });
         setLocations(locations);
     };
@@ -115,13 +112,13 @@ const Home = () => {
         const ctgInputRef = useRef(null);
         const [newLocation, setNewLocation] = useState('');
         const locaInputRef = useRef(null);
-        let inputNode = <Input style={{width:100}} />;
+        let inputNode = <Input style={{ width: 100 }} />;
         if (inputType === 'textArea') {
-            inputNode = <TextArea style={{width:100}} autoSize={{ minRows: 1, maxRows: 3 }} />;
+            inputNode = <TextArea style={{ width: 100 }} autoSize={{ minRows: 1, maxRows: 3 }} />;
         }
         else if (inputType === 'upload') {
             const beforeUpload = (file) => {
-                const isLt2M = file.size / 1024 / 1024 <10 ;
+                const isLt2M = file.size / 1024 / 1024 < 10;
                 if (!isLt2M) {
                     message.error('图片大小不能超过10MB');
                 }
@@ -129,7 +126,7 @@ const Home = () => {
             }
             const props = {
                 name: 'file',
-                beforeUpload:beforeUpload,
+                beforeUpload: beforeUpload,
                 customRequest: async detail => {
                     setFile(detail.file);
                     const reader = new FileReader();
@@ -145,17 +142,18 @@ const Home = () => {
                 showUploadList: false,
                 fileList: [],
             };
-            inputNode =<div className='inputPhoto'>
-                <div style={{display:'inline-block',verticalAlign:'middle'}}>{imageUrl&&<Image src={imageUrl} alt="pic" style={{ width: '20px' }} />}</div>
-            <div style={{display:'inline-block'}}><Upload
-            {...props}
-            name="avatar"
-            className="avatar-uploader"
-            showUploadList={false}
-        >
-            {uploadTip}           
-        </Upload></div>
-        </div>}
+            inputNode = <div className='inputPhoto'>
+                <div style={{ display: 'inline-block', verticalAlign: 'middle' }}>{imageUrl && <Image src={imageUrl} alt="pic" style={{ width: '20px' }} />}</div>
+                <div style={{ display: 'inline-block' }}><Upload
+                    {...props}
+                    name="avatar"
+                    className="avatar-uploader"
+                    showUploadList={false}
+                >
+                    {uploadTip}
+                </Upload></div>
+            </div>
+        }
         else if (inputType === 'selectState') {
             inputNode = <Select
                 defaultValue="闲置"
@@ -172,8 +170,8 @@ const Home = () => {
             };
             const addItem = async (e) => {
                 e.preventDefault();
-                if(newLocation==='') return message.error('新位置不能为空');
-                await addLocation({ location: newLocation });
+                if (newLocation === '') return message.error('新位置不能为空');
+                await addItems('location', { location: newLocation });
                 getLocations();
                 setNewLocation('');
                 setTimeout(() => {
@@ -210,8 +208,8 @@ const Home = () => {
         else if (inputType === 'selectCategory') {
             const addItem = async (e) => {
                 e.preventDefault();
-                if(newCategory==='') return message.error('新类别不能为空');
-                await addCategory({ category: newCategory });
+                if (newCategory === '') return message.error('新类别不能为空');
+                await addItems('category', { category: newCategory });
                 getCategories();
                 setNewCategory('');
                 setTimeout(() => {
@@ -250,8 +248,8 @@ const Home = () => {
             />
         }
         else if (inputType === 'DatePicker') {
-            inputNode = <DatePicker 
-            style={{width:130}}/>
+            inputNode = <DatePicker
+                style={{ width: 130 }} />
         }
         return (
             <td {...restProps}>
@@ -261,12 +259,12 @@ const Home = () => {
                         style={{
                             margin: 0,
                         }}
-                        // rules={[
-                        //     {
-                        //         required: true,
-                        //         message: `请输入${title}!`,
-                        //     },
-                        // ]}
+                    // rules={[
+                    //     {
+                    //         required: true,
+                    //         message: `请输入${title}!`,
+                    //     },
+                    // ]}
                     >
                         {inputNode}
                     </Form.Item>
@@ -310,7 +308,7 @@ const Home = () => {
         });
         setEditingKey(record.key);
     };
-    const cancel = () => {       
+    const cancel = () => {
         if (newEquipment === 1) {
             setData(data.slice(0, data.length - 1));
         }
@@ -346,15 +344,17 @@ const Home = () => {
         }
     };
     async function del(key) {
-        if(newEquipment){
+        if (newEquipment) {
             setData(data.slice(0, data.length - 1));
             setNewEquipment(0)
         }
-        else  {const is_del = await deleteEquipment(key);
-        if (is_del)
-            await getEquipments(page);
-        else
-            message.error('删除失败');}
+        else {
+            const is_del = await deleteEquipment(key);
+            if (is_del)
+                await getEquipments(page);
+            else
+                message.error('删除失败');
+        }
     }
     async function changePage(pageNum) {
         setPage(pageNum);
@@ -368,19 +368,19 @@ const Home = () => {
         key: 'name',
         width: 150,
         editable: true,
-        sorter:(a, b) => {
+        sorter: (a, b) => {
             return a.name.localeCompare(b.name);
         },
-        className:'dark',
+        className: 'dark',
         fixed: 'left'
     },
     {
         title: '类别',
         dataIndex: 'category',
-        className:'dark',
+        className: 'dark',
         width: 170,
         filters: categories.map((item) => { return { text: item, value: item } }),
-        sorter:(a, b) => {
+        sorter: (a, b) => {
             return a.category.localeCompare(b.category);
         },
         filterSearch: true,
@@ -394,15 +394,15 @@ const Home = () => {
         key: 'number',
         // width: 150,
         editable: true,
-        sorter:(a, b) => {
+        sorter: (a, b) => {
             return a.number.localeCompare(b.number);
         },
-        className:'dark'
+        className: 'dark'
     }, {
         title: '购入时间',
         dataIndex: 'buy_time',
-        width:200,
-        className:'dark',
+        width: 200,
+        className: 'dark',
         sorter: (a, b) => {
             return a.buy_time - b.buy_time;
         },
@@ -419,18 +419,18 @@ const Home = () => {
         // width: 150,
         filters: userFilter,
         filterSearch: true,
-        sorter:(a, b) => {
-            if(!a.username) a.username='';
-            if(!b.username) b.username='';
+        sorter: (a, b) => {
+            if (!a.username) a.username = '';
+            if (!b.username) b.username = '';
             return a.username.localeCompare(b.username);
         },
         key: 'username',
         editable: false,
-        className:'dark'
+        className: 'dark'
     }, {
         title: '领用时间',
         dataIndex: 'receive_time',
-        className:'dark',
+        className: 'dark',
         key: 'receive_time',
         sorter: (a, b) => {
             return a.receive_time - b.receive_time;
@@ -443,10 +443,10 @@ const Home = () => {
         title: '使用状态',
         dataIndex: 'state',
         key: 'state',
-        className:'dark',
+        className: 'dark',
         width: 130,
-        sorter:(a, b) => {
-            return a.state-b.state;
+        sorter: (a, b) => {
+            return a.state - b.state;
         },
         render: (state) => {
             switch (state) {
@@ -463,12 +463,12 @@ const Home = () => {
     }, {
         title: '位置',
         dataIndex: 'location',
-        className:'dark',
+        className: 'dark',
         key: 'location',
-        width:160,
-        sorter:(a, b) => {
-            if(!a.location) a.location='';
-            if(!b.location) b.location='';
+        width: 160,
+        sorter: (a, b) => {
+            if (!a.location) a.location = '';
+            if (!b.location) b.location = '';
             return a.location.localeCompare(b.location);
         },
         filters: locations.map((item) => { return { text: item, value: item } }),
@@ -479,7 +479,7 @@ const Home = () => {
         dataIndex: 'configuration',
         required: false,
         key: 'configuration',
-        className:'dark',
+        className: 'dark',
         editable: true,
     },
     {
@@ -490,18 +490,18 @@ const Home = () => {
         // width: 120,
         render: photo_url => {
             return <Image
-            width={20}
-            fallback={fallback}
-            src={photo_url}/>
-    
+                width={20}
+                fallback={fallback}
+                src={photo_url} />
+
         },
         editable: true,
-        className:'dark',
+        className: 'dark',
     },
     {
         title: '操作',
         dataIndex: 'operation',
-        className:'dark',
+        className: 'dark',
         width: 150,
         fixed: 'right',
         render: (text, record) => {
@@ -519,9 +519,9 @@ const Home = () => {
                     <a>取消</a>
                 </Popconfirm>
             </span>) : (
-                <Row gutter={[8,8]}>
+                <Row gutter={[8, 8]}>
                     <Col span={8}>
-                    
+
                         <Tag color={editingKey === '' ? 'green' : 'gray'} onClick={() => {
                             if (editingKey === '') {
                                 edit(record);
@@ -542,13 +542,13 @@ const Home = () => {
                             <Tag color="magenta" >归还</Tag>
                         </Popconfirm>
                     </Col>
-                </Row> : (record.state===0?<Row gutter={[8, 8]}>
+                </Row> : (record.state === 0 ? <Row gutter={[8, 8]}>
                     <Col span={10}>
                         <Popconfirm title="确认领用？" onConfirm={() => receive(record.key)}>
                             <Tag color="geekblue">领用</Tag>
                         </Popconfirm>
                     </Col>
-                </Row>:<></>)
+                </Row> : <></>)
             );
         },
     }];
@@ -613,7 +613,7 @@ const Home = () => {
                                 <Button
                                     onClick={handleAdd}
                                     type="primary"
-                                    style={{backgroundColor:'#36304A',color:'white',fontWeight:'bolder'}}
+                                    style={{ backgroundColor: '#36304A', color: 'white', fontWeight: 'bolder' }}
                                 >
                                     添加设备
                                 </Button>
@@ -622,20 +622,20 @@ const Home = () => {
                     </Row>
                 </div>}
                 <Table
-                    components={
-                      {  body: {
-                            cell: EditableCell,
-                        },}
-                    }                  
+                    components={{
+                            body: {
+                                cell: EditableCell,
+                            },
+                        }}
                     bordered={false}
                     dataSource={data}
                     onChange={onTableChange}
                     columns={mergedColumns}
                     scroll={{
-                        x:window.screen.width,
+                        x: window.screen.width,
                     }}
-                    rowClassName={(record,index)=>{
-                        let className=index%2?'deep':'shallow';
+                    rowClassName={(record, index) => {
+                        let className = index % 2 ? 'deep' : 'shallow';
                         return className
                     }}
                     pagination={{
