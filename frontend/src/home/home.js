@@ -568,36 +568,29 @@ const Home = () => {
         };
     });
 
+
+
     const onTableChange = async (pagination, filters, sorter) => {
         try {
+            class Params{
+                constructor(){
+                    this.name = '';
+                }
+                paramsFactory(prop) {
+                    if (filters[prop]) {
+                        filters[prop].map((item) => {
+                            return this.name = this.name + prop+'=' + item + '&';
+                        })
+                    }
+                    return this;
+                } 
+            }
             if (!filters.category && !filters.state && !filters.location && !filters.username) {
                 await getEquipments(page);
             }
             else {
-                var params = '';
-                if (filters.category) {
-                    filters.category.map((item) => {
-                        return params = params + 'categories=' + item + '&';
-                    })
-                }
-                if (filters.state) {
-                    filters.state.map((item) => {
-                        return params = params + 'states=' + item + '&';
-                    })
-                }
-                if (filters.location) {
-                    filters.location.map((item) => {
-                        return params = params + 'locations=' + item + '&';
-                    })
-                }
-                if (filters.username) {
-                    filters.username.map((item) => {
-                        return params = params + 'usernames=' + item + '&';
-                    })
-                }
-                params = params.slice(0, -1);
+                const params=new Params().paramsFactory('category').paramsFactory('state').paramsFactory('location').paramsFactory('username').name.slice(0, -1);
                 await getSelectList(pagination.current, params)
-
             }
         } catch (error) {
             message.error('查询失败');
