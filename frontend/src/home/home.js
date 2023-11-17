@@ -6,6 +6,7 @@ import './home.css';
 import { state, classfyInput, selectStateOptions, fallback } from './components/config';
 import { updateEquipment, getSelectEquipments, addEquipment, uploadPhoto, getEquipmentList, deleteEquipment, getFilters, addItems } from './service';
 import dayjs from 'dayjs';
+import { beforeUpload } from '../component/utils';
 const { TextArea } = Input;
 const uploadTip = (
     <div>
@@ -13,7 +14,6 @@ const uploadTip = (
     </div>
 )
 //TODO:重构
-
 const Home = () => {
     const location = useLocation();
     const { user_id, is_manager, username } = location.state;
@@ -117,13 +117,6 @@ const Home = () => {
             inputNode = <TextArea style={{ width: 100 }} autoSize={{ minRows: 1, maxRows: 3 }} />;
         }
         else if (inputType === 'upload') {
-            const beforeUpload = (file) => {
-                const isLt2M = file.size / 1024 / 1024 < 10;
-                if (!isLt2M) {
-                    message.error('图片大小不能超过10MB');
-                }
-                return isLt2M;
-            }
             const props = {
                 name: 'file',
                 beforeUpload: beforeUpload,
@@ -487,7 +480,6 @@ const Home = () => {
         dataIndex: 'photo_url',
         key: 'photo_url',
         required: false,
-        // width: 120,
         render: photo_url => {
             return <Image
                 width={20}
@@ -567,9 +559,6 @@ const Home = () => {
             }),
         };
     });
-
-
-
     const onTableChange = async (pagination, filters, sorter) => {
         try {
             class Params{
@@ -600,19 +589,15 @@ const Home = () => {
         <div className='home'>
             <Form form={form} component={false}>
                 {is_manager === 1 && <div className='addBtn'>
-                    <Row justify="space-around" align="middle" gutter={[0, 14]}>
-                        <Col span={2}>
-                            <Tooltip placement="top" title={'数据将被添加至列表尾部'}>
-                                <Button
-                                    onClick={handleAdd}
-                                    type="primary"
-                                    style={{ backgroundColor: '#36304A', color: 'white', fontWeight: 'bolder' }}
-                                >
-                                    添加设备
-                                </Button>
-                            </Tooltip>
-                        </Col>
-                    </Row>
+                    <Tooltip placement="top" title={'数据将被添加至列表尾部'}>
+                        <Button
+                            onClick={handleAdd}
+                            type="primary"
+                            style={{ backgroundColor: '#36304A', color: 'white', fontWeight: 'bolder' }}
+                        >
+                            添加设备
+                        </Button>
+                    </Tooltip>
                 </div>}
                 <Table
                     components={{

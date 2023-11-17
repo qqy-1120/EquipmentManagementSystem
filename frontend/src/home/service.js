@@ -6,6 +6,13 @@ export async function getEquipmentList(pageNum) {
     method: "get",
   });
 }
+export async function getSelectEquipments(pageNum, select) {
+  const pageSize = 10;
+  return fetch({
+    url: "/api/equipment/querypage/" + pageNum + "/" + pageSize + '?' + select,
+    method: "get",
+  });
+}
 export async function updateEquipment(equipment) {
   return fetch({
     url: "/api/equipment/update",
@@ -44,22 +51,6 @@ export async function getFilters(name) {
   });
 }
 
-export async function register(user) {
-  return fetch({
-    url: "/api/register",
-    method: "post",
-    data: user,
-  });
-}
-export async function getSelectEquipments(pageNum, select) {
-  const pageSize = 10;
-  debugger
-  return fetch({
-    url: "/api/equipment/querypage/" + pageNum + "/" + pageSize + '?' + select,
-    method: "get",
-    // params: select,
-  });
-}
 export async function addItems(name, content) {
   return fetch({
     url: "/api/" + name + "/create",
