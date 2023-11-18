@@ -1,4 +1,3 @@
-import { getUsers } from './service';
 const locations = [
     {
         text: 'A栋',
