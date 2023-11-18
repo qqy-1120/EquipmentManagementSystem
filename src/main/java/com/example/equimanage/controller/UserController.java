@@ -20,6 +20,11 @@ public class UserController {
     @Resource
     private UserService userService;
 
+    /**
+     * 登录
+     * @param userDTO
+     * @return
+     */
     @PostMapping("/login")
     public Result login(@RequestBody UserDTO userDTO) {
         if(!isValid(userDTO)) {
@@ -43,6 +48,11 @@ public class UserController {
     }
 
 
+    /**
+     * 注册
+     * @param userDTO
+     * @return
+     */
     @PostMapping("/register")
     public Result register(@RequestBody UserDTO userDTO) {
         if(!isValid(userDTO)) {
@@ -59,6 +69,11 @@ public class UserController {
 
     }
 
+
+    /**
+     * 登出
+     * @return
+     */
     @PostMapping("/logout")
     public Result logout() {
         String result = userService.logout();
@@ -67,10 +82,22 @@ public class UserController {
         else return Result.failure(new Response.LogoutFailedError());
     }
 
+
+    /**
+     * 查看所有使用者
+     * @return
+     */
     @GetMapping("/users")
+    // 限制权限
+    // @PreAuthorize("hasAuthority('ADMIN')")
     public Result findAll() {
         //fixme: 一定要鉴权！鉴权！鉴权！
-        List res = userService.list();
+        // 普通用户和管理员都有查看当前使用者列表的需求
+        // &已经实现密码错误5次就限制登录5min的功能
+        List<User> res = userService.list();
+        for (User user : res) {
+            user.setPassword("");
+        }
         if(res == null) {
             //normally, we will not reach this block
             throw new RequestHandlingException(new Response.InternalServerError(Constants.ErrorCode.REGISTER_CONTROLLER));

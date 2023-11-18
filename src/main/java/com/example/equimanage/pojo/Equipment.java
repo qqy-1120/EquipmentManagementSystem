@@ -111,6 +111,9 @@ public class Equipment implements Serializable {
     private static final long serialVersionUID = 1L;
 
 
+    public Equipment(){
+
+    }
     public Equipment(EquipmentDTO equipmentDTO) {
         this.setId(equipmentDTO.getId()); // 需要考虑为空
         this.setName(equipmentDTO.getName());

@@ -1,6 +1,5 @@
 package com.example.equimanage.common;
 
-
 public class Response {
     private static String CODE_200 = "200"; // 请求成功
     private static String CODE_400 = "400"; // 参数错误
@@ -39,6 +38,9 @@ public class Response {
             super(CODE_600, "Fail to remove the requested item from database.");
         }
     }
+    public static class RecordRetrieveError extends Response{
+        public RecordRetrieveError() { super(CODE_600, "Fail to retrieve the requested item from database."); }
+    }
 
     // 服务器错误
     public static class InternalServerError extends Response{
@@ -47,7 +49,6 @@ public class Response {
         }
     }
 
-    // fixme: 这一行要删掉
     public static class UsernameError extends Response{
         public UsernameError(){
             super(CODE_400, "User not found." );
@@ -89,4 +90,11 @@ public class Response {
         public RedisConnectionError() { super(CODE_600, "Redis connection failed."); }
     }
 
+    public static class TooManyLoginsError extends Response {
+        public TooManyLoginsError() { super(CODE_400, "Too many failed login attempts, please try again after 5 minutes."); }
+    }
+
+    public static class AccessDeniedError extends Response {
+        public AccessDeniedError() { super(CODE_400,"Insufficient permissions, access denied."); }
+    }
 }

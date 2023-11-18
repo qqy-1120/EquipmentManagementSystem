@@ -1,6 +1,7 @@
 package com.example.equimanage.service.impl;
 
 import cn.hutool.core.util.IdUtil;
+import cn.hutool.log.Log;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.equimanage.common.Constants;
 import com.example.equimanage.common.Response;
@@ -45,11 +46,20 @@ public class EquipmentServiceImpl extends ServiceImpl<EquipmentMapper, Equipment
     public String uploadById(Integer id, MultipartFile file) throws IOException {
         // id和uploadpath存在
         //fixme: should we handle exceptions during selectById???
-        Equipment one = equipmentMapper.selectById(id);
-        if(one == null||file.equals("")) throw new RequestHandlingException(new Response.RequestParameterError());
+        // 这里不应该出错，是unchecked exception，应该报修
+        Equipment one;
+        try{
+            one = equipmentMapper.selectById(id);
+        } catch (Exception e) {
+            throw new RequestHandlingException(new Response.RecordRetrieveError());
+        }
+
+        if (one == null || file.equals("")) throw new RequestHandlingException(new Response.RequestParameterError());
         File uploadFileDir = new File(imgUploadPath);
-        if(!uploadFileDir.exists()) {
+
+        if (!uploadFileDir.exists()) {
             //fixme: this should not happen, when it happens, it is an internal error
+            // 如果通过配置文件指定新的path呢？
             uploadFileDir.mkdirs();
         }
 
@@ -64,19 +74,25 @@ public class EquipmentServiceImpl extends ServiceImpl<EquipmentMapper, Equipment
         // 定义一个文件唯一的标识码
         String uuid = IdUtil.fastSimpleUUID();
         String fileUUID = uuid + fileExtension;
-        File uploadFile = new File(imgUploadPath+fileUUID);
+        File uploadFile = new File(imgUploadPath + fileUUID);
 
         // 存储文件
         file.transferTo(uploadFile);
 
         // 存入数据库
         // fixme:不要写死！！！ 存储功能和service无关，应该定义在common util下面
-        // fixed
-        String url = adr+":"+port+"/img/"+fileUUID;
+        // fixed，格式固定因为要在url和file之间实现映射
+        String url = adr + ":" + port + "/img/" + fileUUID;
 
         one.setPhoto_url(url);
         //fixme: should we handle exceptions during updateById???
-        equipmentMapper.updateById(one);
+        // fixed
+        try{
+            equipmentMapper.updateById(one);
+        } catch (Exception e) {
+            throw new RequestHandlingException(new Response.RecordCreateError());
+        }
+
         return url;
     }
 

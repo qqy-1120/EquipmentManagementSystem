@@ -32,16 +32,21 @@ mybatis-plus:
     map-underscore-to-camel-case: false
     # 驼峰关闭可解决数据查询不全问题
 
-#imgUploadPath: D:\img\
-imgUploadPath: /home/bz/equipmanage/image/
-imgAddressPrefix: https://10.177.44.94
+imgUploadPath: D:\img\
+#imgUploadPath: /home/bz/equipmanage/image/
+#imgAddressPrefix: https://10.177.44.94
+imgAddressPrefix: https://localhost
 
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
-  enable-spring-security:
-    false
+    disable-swagger-default-url: true
 
 Jwt:
   secretKey: myjwtkey
 
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG
