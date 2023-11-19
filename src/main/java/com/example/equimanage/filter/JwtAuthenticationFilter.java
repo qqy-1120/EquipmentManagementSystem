@@ -1,6 +1,5 @@
 package com.example.equimanage.filter;
 
-import cn.hutool.log.Log;
 import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.example.equimanage.common.Response;
@@ -14,20 +13,26 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.io.IOException;
-import java.util.Objects;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Resource
     private RedisUtils redisUtils;
+
+    // 添加CustomExceptionFilter过滤器来处理filter抛出的异常
+    @Resource
+    @Qualifier("handlerExceptionResolver")
+    private HandlerExceptionResolver resolver;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -46,17 +51,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             userId = tokenInfo.getClaim("user_id").asString();
         } catch (Exception e) {
             if(e instanceof TokenExpiredException) {
-                throw new RequestHandlingException(new Response.TokenExpiredError());
+                RequestHandlingException re = new RequestHandlingException(new Response.TokenExpiredError());
+                resolver.resolveException(request, response, null, re);
+                return;
             } else {
-                throw new RequestHandlingException(new Response.IllegalTokenError());
+                RequestHandlingException re = new RequestHandlingException(new Response.IllegalTokenError());
+                resolver.resolveException(request, response, null, re);
+                return;
             }
         }
 
         // 从redis获取用户信息
-        String redisKey = userId;
+        String redisKey = "login:" + userId;
         AuthUser authUser = (AuthUser)redisUtils.get(redisKey);
         if(authUser==null){
-            throw new RequestHandlingException(new Response.UserNotLoggedInError());
+            RequestHandlingException re = new RequestHandlingException(new Response.UserNotLoggedInError());
+            resolver.resolveException(request, response, null, re);
         }
         else {
             // 将用户信息存入SecurityContextHolder

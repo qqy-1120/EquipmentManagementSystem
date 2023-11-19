@@ -15,6 +15,8 @@ import com.example.equimanage.mapper.UserMapper;
 import com.example.equimanage.utils.JwtUtils;
 import com.example.equimanage.utils.RedisUtils;
 import jakarta.annotation.Resource;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.support.atomic.RedisAtomicInteger;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -26,6 +28,7 @@ import org.springframework.stereotype.Service;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
 * @author qqy
@@ -37,17 +40,26 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     implements UserService{
 
     @Resource
-    private UserMapper userMapper;
-
-    @Resource
     private RedisUtils redisUtils;
 
     @Resource
     private AuthenticationManager authenticationManager;
 
+    // 限制用户登陆次数
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
+
+    // 时间间隔（分钟）
+    private static final int TIME_INTERVAL = 5;
+    // 登录失败重试次数上限
+    private static final int FAILED_RETRY_TIMES = 5;
+    // redis记录用户登录失败次数key
+    private static final String USER_LOGIN_FAILED_COUNT = "user_login:failed_count:";
+
     @Override
     public Map<String, String> login(UserDTO userDTO) {
         //fixme: should we handle exceptions during findUserByName???
+        // 现在这些被spring secirity接管了
 //        User userWithPwd = userMapper.findUserByName(userDTO.getUsername());
 //        if(userWithPwd == null) {
 //            throw new RequestHandlingException(new Response.UsernameError());
@@ -59,9 +71,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 //            userWithPwd.setPassword(null);
 //            return userWithPwd;
 //        }
+
+        // 登录失败次数检查
+        String key = USER_LOGIN_FAILED_COUNT + userDTO.getUsername();
+        RedisAtomicInteger counter = getRedisCounter(key);
+        counter.getAndIncrement();
+
+        if (counter.get() >= FAILED_RETRY_TIMES) {
+            throw new RequestHandlingException(new Response.TooManyLoginsError());
+        }
         // 通过loadUserByUsername进行认证
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userDTO.getUsername(),userDTO.getPassword());
         Authentication authenticate = authenticationManager.authenticate(authenticationToken);
+
 
         // 认证失败
         if(authenticate==null){
@@ -69,6 +91,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
 
         // 认证通过，生成token
+        stringRedisTemplate.delete(key);
         AuthUser loginUser = (AuthUser) authenticate.getPrincipal();
         String userId = loginUser.getUser_id().toString();
 
@@ -85,13 +108,30 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         payloadMap.put("groupname",group);
         payloadMap.put("token", JwtUtils.generateToken(payloadMap));
 
-        boolean resultRedis = redisUtils.set(userId, loginUser);
+        boolean resultRedis = redisUtils.set("login:" + userId, loginUser);
 
         if(!resultRedis){
             throw new RequestHandlingException(new Response.RedisConnectionError());
         }
         return payloadMap;
     }
+
+    /**
+     * 根据key获取计数器
+     *
+     * @param key key
+     * @return
+     */
+    private RedisAtomicInteger getRedisCounter(String key) {
+        RedisAtomicInteger counter =
+                new RedisAtomicInteger(key, stringRedisTemplate.getConnectionFactory());
+        if (counter.get() == 0) {
+            // 设置过期时间
+            counter.expire(TIME_INTERVAL, TimeUnit.MINUTES);
+        }
+        return counter;
+    }
+
 
     @Override
     public User register(UserDTO userDTO) {
@@ -127,7 +167,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
                     (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
             AuthUser loginUser = (AuthUser) authenticationToken.getPrincipal();
             // 删除redis中的缓存
-            String key = loginUser.getUser_id().toString();
+            String key = "login:" + loginUser.getUser_id().toString();
             redisUtils.del(key);
         } catch (Exception e) {
             return e.getMessage();
