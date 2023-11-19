@@ -7,7 +7,7 @@ import {Logout} from '@icon-park/react'
 import { state, classfyInput, selectStateOptions, fallback } from './components/config';
 import { updateEquipment, getSelectEquipments, addEquipment, uploadPhoto, getEquipmentList, deleteEquipment, getFilters, addItems } from './service';
 import dayjs from 'dayjs';
-import { beforeUpload } from '../component/utils';
+import { beforeUpload,equiFormat } from '../component/utils';
 const { TextArea } = Input;
 const uploadTip = (
     <div>
@@ -23,17 +23,27 @@ const Home = () => {
     const [locations, setLocations] = useState([]);
     const [userFilter, setUserFilter] = useState([]);
     const [data, setData] = useState([]);
+    const [totalEquipment, setTotalEquipment] = useState(0);
+    const [page, setPage] = useState(1);
     const getEquipments = async (pageNum) => {
         const equipmentList = await getEquipmentList(pageNum);
-        setData(equipmentList);
+        const{records,total} = equipmentList;
+        const result = equiFormat(records);
+        setTotalEquipment(total);
+        setData(result);
+        setPage(pageNum);
     }
     const getSelectList = async (pageNum, params) => {
         const equipmentList = await getSelectEquipments(pageNum, params);
-        setData(equipmentList);
+        const{records,total} = equipmentList;
+        const result = equiFormat(records);
+        setTotalEquipment(total);
+        setData(result);
+        setPage(pageNum);
     }
     const getUserList = async () => {
         const users = await getFilters('users');
-        const filter = users.map((item) => { return { text: item, value: item } });
+        const filter = users.map((item) => { return item.username });
         setUserFilter(filter);
     }
     const getCategories = async () => {
@@ -53,7 +63,6 @@ const Home = () => {
         getUserList();
     }, []);
 
-    const [page, setPage] = useState(1);
     const [editingKey, setEditingKey] = useState('');
     const [file, setFile] = useState('');
     const [imageUrl, setImgUrl] = useState('');
@@ -268,6 +277,7 @@ const Home = () => {
         );
     };
     const handleAdd = async () => {
+        if(page!==Math.ceil(totalEquipment/10)) {message.error('请至最后一页添加设备');return ;}
         if (editingKey === '') {
             const maxKey = Math.max(...data.map(item => item.key));
             const newData = {
@@ -348,11 +358,6 @@ const Home = () => {
                 message.error('删除失败');
         }
     }
-    async function changePage(pageNum) {
-        setPage(pageNum);
-        const equipmentList = await getEquipmentList(pageNum);
-        setData(equipmentList);
-    }
 
     const columns = [{
         title: '名称',
@@ -409,7 +414,7 @@ const Home = () => {
         title: '使用者',
         dataIndex: 'username',
         // width: 150,
-        filters: userFilter,
+        filters: userFilter.map((item) => { return { text: item, value: item } }),
         filterSearch: true,
         sorter: (a, b) => {
             if (!a.username) a.username = '';
@@ -559,6 +564,7 @@ const Home = () => {
         };
     });
     const onTableChange = async (pagination, filters, sorter) => {
+        console.log(pagination);
         try {
             class Params{
                 constructor(){
@@ -573,14 +579,10 @@ const Home = () => {
                     return this;
                 } 
             }
-            if (!filters.categories && !filters.states && !filters.locations && !filters.usernames) {
-                await getEquipments(page);
-            }
-            else {
-                const params=new Params().paramsFactory('categories').paramsFactory('states').paramsFactory('locations').paramsFactory('usernames').name.slice(0, -1);
-                await getSelectList(pagination.current, params)
-            }
+            const params=new Params().paramsFactory('categories').paramsFactory('states').paramsFactory('locations').paramsFactory('usernames').name.slice(0, -1);
+            await getSelectList(pagination.current, params)
         } catch (error) {
+            console.log(error);
             message.error('查询失败');
         }
     };
@@ -624,7 +626,8 @@ const Home = () => {
                         return className
                     }}
                     pagination={{
-                        onChange: changePage,
+                        // onChange: changePage,
+                        total: totalEquipment,
                         pageSize: 10
                     }}
                 />
