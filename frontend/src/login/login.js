@@ -1,7 +1,7 @@
 import { userName, pwd } from '../svg';
 import './login.css';
-import { Button, message } from 'antd';
-import { useNavigate } from 'react-router-dom';
+import { message } from 'antd';
+import { useNavigate,Navigate } from 'react-router-dom';
 import { Dropbox } from '@icon-park/react';
 import { useState } from 'react';
 import { login } from './service';
@@ -10,6 +10,7 @@ function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   return (
+    localStorage.getItem('token')?<Navigate to="/home" />:
     <div className="App">
       <div className='logo'>
         <Dropbox theme="outline" size="45" fill="#333" />
@@ -32,20 +33,26 @@ function Login() {
             }} style={{ marginLeft: "5%", backgroundColor: '#EFEFEF', border: 'none', outline: 'none' }} />
         </div>
       </div>
-      <Button type="primary" style={{ backgroundColor: '#5134AB', borderRadius: '40px', width: '20%', height: '50px', fontSize: '18px', marginTop: '5%' }}
+      <div className='loginButtonBox'>
+      <button className='loginButton'
         onClick={async () => {
           var userrole=username==='admin'?1:0;
           try {
-            const { user_id, is_manager } = await login({username: username, password:password,is_manager:userrole}) 
-            if (user_id) {
-              navigate('home', { state: { user_id: user_id, is_manager: is_manager, username: username } })
+            const { user_id, groupname,token } = await login({username: username, password:password,is_manager:userrole}) 
+            if (user_id) {  
+              localStorage.setItem('token',token)
+              localStorage.setItem('groupname',groupname) 
+              localStorage.setItem('username',username)
+              localStorage.setItem('user_id',user_id)                                                                                  
+              navigate('home')
             }
           } catch (error) {
             message.error('用户名或密码错误')
           }
-        }}>登录</Button>
+        }}>登录</button>
+</div>
+</div>
 
-    </div>
   );
 }
 

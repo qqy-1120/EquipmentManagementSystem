@@ -10,6 +10,9 @@ export default function fetch(option = {}) {
     url:url,
     // url: `${HOST}${url}`,
     withCredentials: true,
+    headers: {
+      'token': localStorage.getItem('token'),
+    },
     ...rest,
   }).then(res => {    
     const { code, data } = res.data;

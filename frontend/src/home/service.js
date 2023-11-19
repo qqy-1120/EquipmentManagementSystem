@@ -15,14 +15,14 @@ export async function getSelectEquipments(pageNum, select) {
 }
 export async function updateEquipment(equipment) {
   return fetch({
-    url: "/api/equipment/update",
+    url: "/api/equipment",
     method: "put",
     data: equipment,
   });
 }
 export async function addEquipment(equipment) {
   return fetch({
-    url: "/api/equipment/create",
+    url: "/api/equipment",
     method: "post",
     data: equipment,
   });
@@ -37,23 +37,21 @@ export async function uploadPhoto(file, id) {
   const uploadImg = new window.FormData();
   uploadImg.append('file', file);
   const res = await fetch({
-    url: "/api/equipment/upload/" + id,
+    url: "/api/equipment/image/" + id,
     method: "post",
     data: uploadImg,
   });
   return res;
 }
-
 export async function getFilters(name) {
   return fetch({
-    url: "/api/" + name + "/list",
+    url: "/api/" + name,
     method: "get",
   });
 }
-
 export async function addItems(name, content) {
   return fetch({
-    url: "/api/" + name + "/create",
+    url: "/api/" + name,
     method: "post",
     params: content,
   });

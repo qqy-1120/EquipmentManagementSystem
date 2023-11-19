@@ -1,8 +1,9 @@
 import { Form, Image, Upload, Badge, DatePicker, Input, Popconfirm, Table, Select, Divider, Space, Row, Col, Tag, Tooltip, Button, message } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { useState, useRef, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
 import './home.css';
+import { useNavigate } from 'react-router-dom';
+import {Logout} from '@icon-park/react'
 import { state, classfyInput, selectStateOptions, fallback } from './components/config';
 import { updateEquipment, getSelectEquipments, addEquipment, uploadPhoto, getEquipmentList, deleteEquipment, getFilters, addItems } from './service';
 import dayjs from 'dayjs';
@@ -15,8 +16,7 @@ const uploadTip = (
 )
 //TODO:重构
 const Home = () => {
-    const location = useLocation();
-    const { user_id, is_manager, username } = location.state;
+    const navigate = useNavigate();
     const [newEquipment, setNewEquipment] = useState(0);
     const [form] = Form.useForm();
     const [categories, setCategories] = useState([]);
@@ -32,17 +32,17 @@ const Home = () => {
         setData(equipmentList);
     }
     const getUserList = async () => {
-        const username = await getFilters('user');
-        const filter = username.map((item) => { return { text: item, value: item } });
+        const users = await getFilters('users');
+        const filter = users.map((item) => { return { text: item, value: item } });
         setUserFilter(filter);
     }
     const getCategories = async () => {
-        const categoryList = await getFilters('category');
+        const categoryList = await getFilters('categories');
         const cateArray = categoryList.map((item) => { return item.category });
         setCategories(cateArray);
     };
     const getLocations = async () => {
-        const locationsList = await getFilters('location');
+        const locationsList = await getFilters('locations');
         const locations = locationsList.map((item) => { return item.location });
         setLocations(locations);
     };
@@ -82,8 +82,8 @@ const Home = () => {
             const index = newData.findIndex((item) => key === item.key);
             if (index > -1) {
                 const item = newData[index];
-                item.user_id = user_id;
-                item.username = username;
+                item.user_id = localStorage.getItem('user_id');
+                item.username = localStorage.getItem('username');
                 item.is_receive = 1;
                 item.state = 1;
                 item.receive_time = new Date();
@@ -328,7 +328,6 @@ const Home = () => {
                 await updateEquipment({ id: key, ...row });
             }
         } catch (errInfo) {
-            console.log('Validate Failed:', errInfo);
             message.error('修改失败');
         } finally {
             getEquipments(page);
@@ -377,7 +376,7 @@ const Home = () => {
             return a.category.localeCompare(b.category);
         },
         filterSearch: true,
-        key: 'category',
+        key: 'categories',
         editable: true,
         fixed: 'left'
     },
@@ -417,7 +416,7 @@ const Home = () => {
             if (!b.username) b.username = '';
             return a.username.localeCompare(b.username);
         },
-        key: 'username',
+        key: 'usernames',
         editable: false,
         className: 'dark'
     }, {
@@ -435,7 +434,7 @@ const Home = () => {
     }, {
         title: '使用状态',
         dataIndex: 'state',
-        key: 'state',
+        key: 'states',
         className: 'dark',
         width: 130,
         sorter: (a, b) => {
@@ -457,7 +456,7 @@ const Home = () => {
         title: '位置',
         dataIndex: 'location',
         className: 'dark',
-        key: 'location',
+        key: 'locations',
         width: 160,
         sorter: (a, b) => {
             if (!a.location) a.location = '';
@@ -498,7 +497,7 @@ const Home = () => {
         fixed: 'right',
         render: (text, record) => {
             const editable = isEditing(record);
-            return is_manager === 1 ? editable ? (<span>
+            return localStorage.getItem('groupname') === 'ADMIN' ? editable ? (<span>
                 <a
                     onClick={() => save(record.key)}
                     style={{
@@ -527,7 +526,7 @@ const Home = () => {
                         </Popconfirm>
                     </Col>
                 </Row>
-            ) : (record.user_id === user_id ?
+            ) : (record.user_id === localStorage.getItem('user_id') ?
                 <Row gutter={[8, 8]}>
                     <Col span={10}>
                         <Popconfirm title="确认归还？" onConfirm={() => restore(record.key)}>
@@ -574,11 +573,11 @@ const Home = () => {
                     return this;
                 } 
             }
-            if (!filters.category && !filters.state && !filters.location && !filters.username) {
+            if (!filters.categories && !filters.states && !filters.locations && !filters.usernames) {
                 await getEquipments(page);
             }
             else {
-                const params=new Params().paramsFactory('category').paramsFactory('state').paramsFactory('location').paramsFactory('username').name.slice(0, -1);
+                const params=new Params().paramsFactory('categories').paramsFactory('states').paramsFactory('locations').paramsFactory('usernames').name.slice(0, -1);
                 await getSelectList(pagination.current, params)
             }
         } catch (error) {
@@ -587,8 +586,8 @@ const Home = () => {
     };
     return (
         <div className='home'>
-            <Form form={form} component={false}>
-                {is_manager === 1 && <div className='addBtn'>
+            <Form form={form} component={false}>               
+                {localStorage.getItem('groupname') === 'ADMIN' && <div className='addBtn'>
                     <Tooltip placement="top" title={'数据将被添加至列表尾部'}>
                         <Button
                             onClick={handleAdd}
@@ -599,6 +598,14 @@ const Home = () => {
                         </Button>
                     </Tooltip>
                 </div>}
+                <div className='head'>
+                <Logout theme="outline" size="25" fill="#36304A" strokeLinejoin="miter" strokeLinecap="square" onClick={()=>{               
+                localStorage.removeItem('token');
+                localStorage.removeItem('groupname');
+                localStorage.removeItem('username');
+                localStorage.removeItem('user_id');
+                navigate('../')
+            }}/></div>
                 <Table
                     components={{
                             body: {
@@ -622,6 +629,7 @@ const Home = () => {
                     }}
                 />
             </Form>
+
         </div>
     );
 };
