@@ -73,8 +73,8 @@ tr.ant-table-row.ant-table-row-level-0.deep td.ant-table-cell.dark.ant-table-col
   margin-bottom: 20px;
 }
 
-.head {
-  position: fixed;
+.logout {
+  position: absolute;
   top: 44px;
-  right: 60px;
+  right: 5%;
 }

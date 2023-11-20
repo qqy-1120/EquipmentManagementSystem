@@ -43,7 +43,7 @@ export async function uploadPhoto(file, id) {
   });
   return res;
 }
-export async function getFilters(name) {
+export async function getItems(name) {
   return fetch({
     url: "/api/" + name,
     method: "get",

@@ -18,6 +18,8 @@ const equiFormat = (data) => {
             key: item.id,
             receive_time: item.receive_time && item.receive_time !== '' ? dayjs(item.receive_time) : '',
             buy_time: item.buy_time && item.buy_time !== '' ? dayjs(item.buy_time) : '',
+            location: item.location ? item.location : '',
+            username: item.username ? item.username : '',
         }
     })
     return records;

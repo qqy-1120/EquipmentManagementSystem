@@ -3,11 +3,11 @@ import { PlusOutlined } from '@ant-design/icons';
 import { useState, useRef, useEffect } from 'react';
 import './home.css';
 import { useNavigate } from 'react-router-dom';
-import {Logout} from '@icon-park/react'
+import { Logout } from '@icon-park/react'
 import { state, classfyInput, selectStateOptions, fallback } from './components/config';
-import { updateEquipment, getSelectEquipments, addEquipment, uploadPhoto, getEquipmentList, deleteEquipment, getFilters, addItems } from './service';
+import { updateEquipment, getSelectEquipments, addEquipment, uploadPhoto, getEquipmentList, deleteEquipment, getItems, addItems } from './service';
 import dayjs from 'dayjs';
-import { beforeUpload,equiFormat } from '../component/utils';
+import { beforeUpload, equiFormat } from '../component/utils';
 const { TextArea } = Input;
 const uploadTip = (
     <div>
@@ -27,7 +27,7 @@ const Home = () => {
     const [page, setPage] = useState(1);
     const getEquipments = async (pageNum) => {
         const equipmentList = await getEquipmentList(pageNum);
-        const{records,total} = equipmentList;
+        const { records, total } = equipmentList;
         const result = equiFormat(records);
         setTotalEquipment(total);
         setData(result);
@@ -35,24 +35,24 @@ const Home = () => {
     }
     const getSelectList = async (pageNum, params) => {
         const equipmentList = await getSelectEquipments(pageNum, params);
-        const{records,total} = equipmentList;
+        const { records, total } = equipmentList;
         const result = equiFormat(records);
         setTotalEquipment(total);
         setData(result);
         setPage(pageNum);
     }
     const getUserList = async () => {
-        const users = await getFilters('users');
+        const users = await getItems('users');
         const filter = users.map((item) => { return item.username });
         setUserFilter(filter);
     }
     const getCategories = async () => {
-        const categoryList = await getFilters('categories');
+        const categoryList = await getItems('categories');
         const cateArray = categoryList.map((item) => { return item.category });
         setCategories(cateArray);
     };
     const getLocations = async () => {
-        const locationsList = await getFilters('locations');
+        const locationsList = await getItems('locations');
         const locations = locationsList.map((item) => { return item.location });
         setLocations(locations);
     };
@@ -277,7 +277,7 @@ const Home = () => {
         );
     };
     const handleAdd = async () => {
-        if(page!==Math.ceil(totalEquipment/10)) {message.error('请至最后一页添加设备');return ;}
+        if (page !== Math.ceil(totalEquipment / 10)) { message.error('请至最后一页添加设备'); return; }
         if (editingKey === '') {
             const maxKey = Math.max(...data.map(item => item.key));
             const newData = {
@@ -417,8 +417,6 @@ const Home = () => {
         filters: userFilter.map((item) => { return { text: item, value: item } }),
         filterSearch: true,
         sorter: (a, b) => {
-            if (!a.username) a.username = '';
-            if (!b.username) b.username = '';
             return a.username.localeCompare(b.username);
         },
         key: 'usernames',
@@ -463,9 +461,7 @@ const Home = () => {
         className: 'dark',
         key: 'locations',
         width: 160,
-        sorter: (a, b) => {
-            if (!a.location) a.location = '';
-            if (!b.location) b.location = '';
+        sorter: async (a, b) => {
             return a.location.localeCompare(b.location);
         },
         filters: locations.map((item) => { return { text: item, value: item } }),
@@ -564,23 +560,31 @@ const Home = () => {
         };
     });
     const onTableChange = async (pagination, filters, sorter) => {
-        console.log(pagination);
+
         try {
-            class Params{
-                constructor(){
+            class Params {
+                constructor() {
                     this.name = '';
                 }
                 paramsFactory(prop) {
                     if (filters[prop]) {
                         filters[prop].map((item) => {
-                            return this.name = this.name + prop+'=' + item + '&';
+                            return this.name = this.name + prop + '=' + item + '&';
                         })
                     }
                     return this;
-                } 
+                }
             }
-            const params=new Params().paramsFactory('categories').paramsFactory('states').paramsFactory('locations').paramsFactory('usernames').name.slice(0, -1);
-            await getSelectList(pagination.current, params)
+            if (!sorter.order) {
+                const params = new Params().paramsFactory('categories').paramsFactory('states').paramsFactory('locations').paramsFactory('usernames').name.slice(0, -1);
+                await getSelectList(pagination.current, params)
+            }
+            else {
+                const equipments = await getItems('equipments');
+                const res = equiFormat(equipments);
+                setData(res);
+                setPage(pagination.current);
+            }
         } catch (error) {
             console.log(error);
             message.error('查询失败');
@@ -588,7 +592,7 @@ const Home = () => {
     };
     return (
         <div className='home'>
-            <Form form={form} component={false}>               
+            <Form form={form} component={false}>
                 {localStorage.getItem('groupname') === 'ADMIN' && <div className='addBtn'>
                     <Tooltip placement="top" title={'数据将被添加至列表尾部'}>
                         <Button
@@ -600,20 +604,20 @@ const Home = () => {
                         </Button>
                     </Tooltip>
                 </div>}
-                <div className='head'>
-                <Logout theme="outline" size="25" fill="#36304A" strokeLinejoin="miter" strokeLinecap="square" onClick={()=>{               
-                localStorage.removeItem('token');
-                localStorage.removeItem('groupname');
-                localStorage.removeItem('username');
-                localStorage.removeItem('user_id');
-                navigate('../')
-            }}/></div>
+                <div className='logout'>
+                    <Logout theme="outline" size="25" fill="#36304A" strokeLinejoin="miter" strokeLinecap="square" onClick={() => {
+                        localStorage.removeItem('token');
+                        localStorage.removeItem('groupname');
+                        localStorage.removeItem('username');
+                        localStorage.removeItem('user_id');
+                        navigate('../')
+                    }} /></div>
                 <Table
                     components={{
-                            body: {
-                                cell: EditableCell,
-                            },
-                        }}
+                        body: {
+                            cell: EditableCell,
+                        },
+                    }}
                     bordered={false}
                     dataSource={data}
                     onChange={onTableChange}
@@ -626,7 +630,7 @@ const Home = () => {
                         return className
                     }}
                     pagination={{
-                        // onChange: changePage,
+                        current: page,
                         total: totalEquipment,
                         pageSize: 10
                     }}
