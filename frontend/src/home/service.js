@@ -1,13 +1,12 @@
 import fetch from "../component/fetch";
+import { pageSize } from "../component/config";
 export async function getEquipmentList(pageNum) {
-  const pageSize = 10;
   return fetch({
     url: "/api/equipment/page/" + pageNum + "/" + pageSize,
     method: "get",
   });
 }
 export async function getSelectEquipments(pageNum, select) {
-  const pageSize = 10;
   return fetch({
     url: "/api/equipment/querypage/" + pageNum + "/" + pageSize + '?' + select,
     method: "get",

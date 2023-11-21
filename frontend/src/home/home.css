@@ -72,7 +72,9 @@ tr.ant-table-row.ant-table-row-level-0.deep td.ant-table-cell.dark.ant-table-col
 .addBtn {
   margin-bottom: 20px;
 }
-
+.user{
+  margin-top: 48px;
+}
 .logout {
   position: absolute;
   top: 44px;

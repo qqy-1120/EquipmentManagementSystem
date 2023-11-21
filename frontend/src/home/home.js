@@ -1,13 +1,16 @@
-import { Form, Image, Upload, Badge, DatePicker, Input, Popconfirm, Table, Select, Divider, Space, Row, Col, Tag, Tooltip, Button, message } from 'antd';
+import { Form, Image, Upload, Badge, DatePicker, Input, Popconfirm, Table, Select, Divider, Space, Row, Col, Tag, Button, message } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { useState, useRef, useEffect } from 'react';
 import './home.css';
 import { useNavigate } from 'react-router-dom';
 import { Logout } from '@icon-park/react'
 import { state, classfyInput, selectStateOptions, fallback } from './components/config';
-import { updateEquipment, getSelectEquipments, addEquipment, uploadPhoto, getEquipmentList, deleteEquipment, getItems, addItems } from './service';
+import { updateEquipment, addEquipment, uploadPhoto, deleteEquipment, getItems, addItems } from './service';
 import dayjs from 'dayjs';
 import { beforeUpload, equiFormat } from '../component/utils';
+import { pageSize } from '../component/config';
+import CollectionCreateForm from './components/collectionCreateForm';
+
 const { TextArea } = Input;
 const uploadTip = (
     <div>
@@ -17,34 +20,20 @@ const uploadTip = (
 //TODO:重构
 const Home = () => {
     const navigate = useNavigate();
-    const [newEquipment, setNewEquipment] = useState(0);
     const [form] = Form.useForm();
     const [categories, setCategories] = useState([]);
     const [locations, setLocations] = useState([]);
     const [userFilter, setUserFilter] = useState([]);
     const [data, setData] = useState([]);
-    const [totalEquipment, setTotalEquipment] = useState(0);
-    const [page, setPage] = useState(1);
-    const getEquipments = async (pageNum) => {
-        const equipmentList = await getEquipmentList(pageNum);
-        const { records, total } = equipmentList;
+    const getAllEquipments = async () => {
+        const records = await getItems('equipments');
         const result = equiFormat(records);
-        setTotalEquipment(total);
         setData(result);
-        setPage(pageNum);
-    }
-    const getSelectList = async (pageNum, params) => {
-        const equipmentList = await getSelectEquipments(pageNum, params);
-        const { records, total } = equipmentList;
-        const result = equiFormat(records);
-        setTotalEquipment(total);
-        setData(result);
-        setPage(pageNum);
     }
     const getUserList = async () => {
         const users = await getItems('users');
-        const filter = users.map((item) => { return item.username });
-        setUserFilter(filter);
+        const res = users.map((item) => { return item.username });
+        setUserFilter(res);
     }
     const getCategories = async () => {
         const categoryList = await getItems('categories');
@@ -57,7 +46,7 @@ const Home = () => {
         setLocations(locations);
     };
     useEffect(() => {
-        getEquipments(1);
+        getAllEquipments();
         getCategories();
         getLocations();
         getUserList();
@@ -82,7 +71,7 @@ const Home = () => {
         } catch (error) {
             message.error('归还失败');
         } finally {
-            getEquipments(page);
+            getAllEquipments();
         }
     }
     const receive = async (key) => {
@@ -101,7 +90,7 @@ const Home = () => {
         } catch (error) {
             message.error('领用失败');
         } finally {
-            getEquipments(page);
+            getAllEquipments();
         }
     }
     const isEditing = (record) => {
@@ -208,6 +197,7 @@ const Home = () => {
             />
         }
         else if (inputType === 'selectCategory') {
+            // inputNode=<SelectCategory categories={categories} getCategories={getCategories}/>
             const addItem = async (e) => {
                 e.preventDefault();
                 if (newCategory === '') return message.error('新类别不能为空');
@@ -229,6 +219,7 @@ const Home = () => {
                 dropdownRender={(menu) => (
                     <>
                         {menu}
+                        {console.log(menu)}
                         <Divider style={{ margin: '8px 0', }} />
                         <Space style={{ padding: '0 8px 4px', }}>
                             <Input
@@ -261,12 +252,15 @@ const Home = () => {
                         style={{
                             margin: 0,
                         }}
-                    // rules={[
-                    //     {
-                    //         required: true,
-                    //         message: `请输入${title}!`,
-                    //     },
-                    // ]}
+                        rules={[
+                            title === '名称' || title === '类别' || title === '资产编号' ?
+                                {
+                                    required: true,
+                                    message: `请输入${title}!`,
+                                } : {
+                                    required: false,
+                                },
+                        ]}
                     >
                         {inputNode}
                     </Form.Item>
@@ -277,26 +271,9 @@ const Home = () => {
         );
     };
     const handleAdd = async () => {
-        if (page !== Math.ceil(totalEquipment / 10)) { message.error('请至最后一页添加设备'); return; }
+        if (tableFilter || tableSorter) return message.error('请先取消筛选或排序');
         if (editingKey === '') {
-            const maxKey = Math.max(...data.map(item => item.key));
-            const newData = {
-                key: maxKey + 1,
-                name: '',
-                category: '',
-                number: '',
-                buy_time: '',
-                state: 0,
-                is_receive: 0,
-                receive_time: '',
-                user_id: 0,
-                username: '',
-                photo_url: '',
-                location: '',
-                configuration: ''
-            };
-            setData([...data, newData]);
-            setNewEquipment(1);
+            setOpen(true);
         }
         else {
             message.error('请先保存正在编辑的设备信息');
@@ -312,51 +289,35 @@ const Home = () => {
         setEditingKey(record.key);
     };
     const cancel = () => {
-        if (newEquipment === 1) {
-            setData(data.slice(0, data.length - 1));
-        }
         setImgUrl('');
         setEditingKey('');
-        setNewEquipment(0);
     };
     const save = async (key) => {
         try {
             const row = await form.validateFields();
-            if (newEquipment === 1) {
-                const newEquiId = await addEquipment({ ...row });
-                if (file !== '') await uploadPhoto(file, newEquiId);
-                setNewEquipment(0);
+            if (file !== '') await uploadPhoto(file, key);
+            if (row.state === 2 || row.state === 0) {
+                row.is_receive = 0;
+                row.receive_time = null;
+                row.user_id = 0;
+                row.username = '';
             }
-            else {
-                if (file !== '') await uploadPhoto(file, key);
-                if (row.state === 2) {
-                    row.is_receive = 0;
-                    row.receive_time = null;
-                    row.user_id = 0;
-                    row.username = '';
-                }
-                await updateEquipment({ id: key, ...row });
-            }
+            await updateEquipment({ id: key, ...row });
         } catch (errInfo) {
             message.error('修改失败');
         } finally {
-            getEquipments(page);
+            getAllEquipments();
             setEditingKey('');
             setImgUrl('');
         }
     };
     async function del(key) {
-        if (newEquipment) {
-            setData(data.slice(0, data.length - 1));
-            setNewEquipment(0)
+        const is_del = await deleteEquipment(key);
+        if (is_del) {
+            await getAllEquipments();
         }
-        else {
-            const is_del = await deleteEquipment(key);
-            if (is_del)
-                await getEquipments(page);
-            else
-                message.error('删除失败');
-        }
+        else
+            message.error('删除失败');
     }
 
     const columns = [{
@@ -377,7 +338,9 @@ const Home = () => {
         className: 'dark',
         width: 170,
         filters: categories.map((item) => { return { text: item, value: item } }),
+        onFilter: (value, record) => record.category === value,
         sorter: (a, b) => {
+            console.log(a.category, b.category, a.category.localeCompare(b.category))
             return a.category.localeCompare(b.category);
         },
         filterSearch: true,
@@ -415,6 +378,7 @@ const Home = () => {
         dataIndex: 'username',
         // width: 150,
         filters: userFilter.map((item) => { return { text: item, value: item } }),
+        onFilter: (value, record) => record.username === value,
         filterSearch: true,
         sorter: (a, b) => {
             return a.username.localeCompare(b.username);
@@ -454,6 +418,7 @@ const Home = () => {
             }
         },
         filters: state,
+        onFilter: (value, record) => record.state === value,
         editable: true,
     }, {
         title: '位置',
@@ -461,10 +426,11 @@ const Home = () => {
         className: 'dark',
         key: 'locations',
         width: 160,
-        sorter: async (a, b) => {
+        sorter: (a, b) => {
             return a.location.localeCompare(b.location);
         },
         filters: locations.map((item) => { return { text: item, value: item } }),
+        onFilter: (value, record) => record.location === value,
         filterSearch: true,
         editable: true,
     }, {
@@ -559,50 +525,57 @@ const Home = () => {
             }),
         };
     });
+    const [tableFilter, setFilter] = useState(false);
+    const [tableSorter, setSorter] = useState(false);
     const onTableChange = async (pagination, filters, sorter) => {
-
         try {
-            class Params {
-                constructor() {
-                    this.name = '';
-                }
-                paramsFactory(prop) {
-                    if (filters[prop]) {
-                        filters[prop].map((item) => {
-                            return this.name = this.name + prop + '=' + item + '&';
-                        })
-                    }
-                    return this;
-                }
-            }
-            if (!sorter.order) {
-                const params = new Params().paramsFactory('categories').paramsFactory('states').paramsFactory('locations').paramsFactory('usernames').name.slice(0, -1);
-                await getSelectList(pagination.current, params)
-            }
-            else {
-                const equipments = await getItems('equipments');
-                const res = equiFormat(equipments);
-                setData(res);
-                setPage(pagination.current);
-            }
+            filters.states || filters.categories || filters.locations || filters.usernames ? setFilter(true) : setFilter(false);
+            sorter.order ? setSorter(true) : setSorter(false);
         } catch (error) {
             console.log(error);
-            message.error('查询失败');
+            message.error('操作失败');
+        }
+    };
+    const [open, setOpen] = useState(false);
+    const onCreate = async (values) => {
+        const newData = {
+            name: values.name,
+            category: values.category,
+            number: values.number,
+            buy_time: values.buy_time,
+            state: 0,
+            is_receive: 0,
+            receive_time: '',
+            user_id: 0,
+            username: '',
+            photo_url: '',
+            location: '',
+            configuration: values.configuration
+        };
+        try {
+            await addEquipment({ ...newData });
+            await getAllEquipments();
+            message.success('添加成功');
+        }
+        catch (error) {
+            console.log(error, 'create new equipment error');
+            message.error('添加失败');
+        }
+        finally {
+            setOpen(false);
         }
     };
     return (
         <div className='home'>
             <Form form={form} component={false}>
                 {localStorage.getItem('groupname') === 'ADMIN' && <div className='addBtn'>
-                    <Tooltip placement="top" title={'数据将被添加至列表尾部'}>
-                        <Button
-                            onClick={handleAdd}
-                            type="primary"
-                            style={{ backgroundColor: '#36304A', color: 'white', fontWeight: 'bolder' }}
-                        >
-                            添加设备
-                        </Button>
-                    </Tooltip>
+                    <Button
+                        onClick={handleAdd}
+                        type="primary"
+                        style={{ backgroundColor: '#36304A', color: 'white', fontWeight: 'bolder' }}
+                    >
+                        添加设备
+                    </Button>
                 </div>}
                 <div className='logout'>
                     <Logout theme="outline" size="25" fill="#36304A" strokeLinejoin="miter" strokeLinecap="square" onClick={() => {
@@ -612,29 +585,36 @@ const Home = () => {
                         localStorage.removeItem('user_id');
                         navigate('../')
                     }} /></div>
-                <Table
-                    components={{
-                        body: {
-                            cell: EditableCell,
-                        },
-                    }}
-                    bordered={false}
-                    dataSource={data}
-                    onChange={onTableChange}
-                    columns={mergedColumns}
-                    scroll={{
-                        x: window.screen.width,
-                    }}
-                    rowClassName={(record, index) => {
-                        let className = index % 2 ? 'deep' : 'shallow';
-                        return className
-                    }}
-                    pagination={{
-                        current: page,
-                        total: totalEquipment,
-                        pageSize: 10
+                <CollectionCreateForm
+                    open={open}
+                    onCreate={onCreate}
+                    onCancel={() => {
+                        setOpen(false);
                     }}
                 />
+                <div className={localStorage.getItem('groupname') === 'ADMIN' ? 'admin' : 'user'}>
+                    <Table
+                        components={{
+                            body: {
+                                cell: EditableCell,
+                            },
+                        }}
+                        bordered={false}
+                        dataSource={data}
+                        onChange={onTableChange}
+                        columns={mergedColumns}
+                        scroll={{
+                            x: window.screen.width,
+                        }}
+                        rowClassName={(record, index) => {
+                            let className = index % 2 ? 'deep' : 'shallow';
+                            return className
+                        }}
+                        pagination={{
+                            pageSize: pageSize
+                        }}
+                    />
+                </div>
             </Form>
 
         </div>
