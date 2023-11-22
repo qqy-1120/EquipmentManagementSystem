@@ -1,71 +1,43 @@
-.logo {
-  margin-top: 5%;
-}
-
-.footer {
-  margin-top: 5%;
-  display: flex;
-  align-items: center;
-}
-.footerTip{
-  color: gray;
-  padding-left: 8px;
-  font-size: 14px;
-}
-.loginBox {
-  width: 30%;
-  margin-top: 5%;
-  display: flex;
-  flex-direction: column;
-
-}
-.loginButtonBox{
-  width: 10%;
-  margin-top: 5%;
-  height: 50px;
-  
-}
-.loginButton {
-  background-color: #36304A;
-  border-radius: 30px;
-  width: 100%;
-  height: 100%;
-  font-size: 18px;
-  color: white;
-  font-weight: bold;
-}
-.inputBox {
-  background-color: #EFEFEF;
-  height: 56px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  padding-left: 5%;
-}
-
 .App {
   display: flex;
   flex-direction: column;
   align-items: center;
 }
+.logo {
+  margin-top: 5%;
+}
 
+#basic{
+  /* max-width: 600px; */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top:5% ;
+  width: 400px;
+}
+.loginButton{
+  margin-top: 25%;
+  font-size: 18px;
+  width: 100px;
+  height: 40px;
+  border-radius:30px
+}
+.formItem{
+  margin-bottom: 30px;
+}
 @media screen and (max-width: 850px) {
-  .loginBox {
-    width: 70%;
-    margin-top: 10%;
+  .logo{
+    margin-top: 20%;
   }
-  .loginButtonBox{
-    width: 30%;
-    margin-top: 5%;
-    height: 40px;
-    margin-top: 15%;
+  #basic{
+    width: 60%;
+    margin-top: 10%;
   }
   .loginButton{
     font-size: 16px;
-    font-weight: bold;
-  }
-  .App{
-    margin-top: 30%;
+    width: 80px;
+    height: 40px;
+    border-radius:20px
   }
 }
 

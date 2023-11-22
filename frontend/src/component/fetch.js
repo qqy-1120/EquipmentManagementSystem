@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { message } from 'antd';
-
+import { localeMessage } from './utils';
 export const HOST = 'https://10.177.44.94:9091';
 export default function fetch(option = {}) {
   const { url, byteResponse = false, id,...rest } = option;
@@ -20,7 +20,7 @@ export default function fetch(option = {}) {
     if (byteResponse) {
       return data;
     }
-    message.error(msg || '服务器错误，请重试');
-    return Promise.reject(new Error(msg));
+    // message.error(msg || '服务器错误，请重试');
+    return Promise.reject(new Error(localeMessage(msg)));
   });
 }

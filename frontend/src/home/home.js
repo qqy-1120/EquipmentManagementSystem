@@ -4,13 +4,13 @@ import { useState, useRef, useEffect } from 'react';
 import './home.css';
 import { useNavigate } from 'react-router-dom';
 import { Logout } from '@icon-park/react'
-import { state, classfyInput, selectStateOptions, fallback } from './components/config';
+import { state, classfyInput, selectStateOptions, fallback, tableRules } from './components/config';
 import { updateEquipment, addEquipment, uploadPhoto, deleteEquipment, getItems, addItems } from './service';
 import dayjs from 'dayjs';
 import { beforeUpload, equiFormat } from '../component/utils';
 import { pageSize } from '../component/config';
 import CollectionCreateForm from './components/collectionCreateForm';
-
+import { shortInputLength,longInputLength,middleInputLength } from '../component/config';
 const { TextArea } = Input;
 const uploadTip = (
     <div>
@@ -26,24 +26,45 @@ const Home = () => {
     const [userFilter, setUserFilter] = useState([]);
     const [data, setData] = useState([]);
     const getAllEquipments = async () => {
-        const records = await getItems('equipments');
-        const result = equiFormat(records);
-        setData(result);
+        try {
+            const records = await getItems('equipments');
+            const result = equiFormat(records);
+            setData(result);
+        }
+        catch (error) {
+            console.log(error, 'get all equipments error');
+            message.error(error.message);
+        }
     }
     const getUserList = async () => {
-        const users = await getItems('users');
-        const res = users.map((item) => { return item.username });
-        setUserFilter(res);
+        try {
+            const users = await getItems('users');
+            const res = users.map((item) => { return item.username });
+            setUserFilter(res);
+        } catch (error) {
+            console.log(error, 'get user list error');
+            message.error(error.message);
+        }
     }
     const getCategories = async () => {
-        const categoryList = await getItems('categories');
-        const cateArray = categoryList.map((item) => { return item.category });
-        setCategories(cateArray);
+        try {
+            const categoryList = await getItems('categories');
+            const cateArray = categoryList.map((item) => { return item.category });
+            setCategories(cateArray);
+        } catch (error) {
+            console.log(error, 'get categories error');
+            message.error(error.message);
+        }
     };
     const getLocations = async () => {
-        const locationsList = await getItems('locations');
-        const locations = locationsList.map((item) => { return item.location });
-        setLocations(locations);
+        try {
+            const locationsList = await getItems('locations');
+            const locations = locationsList.map((item) => { return item.location });
+            setLocations(locations);
+        } catch (error) {
+            console.log(error, 'get locations error');
+            message.error(error.message);
+        }
     };
     useEffect(() => {
         getAllEquipments();
@@ -69,7 +90,8 @@ const Home = () => {
                 await updateEquipment({ id: key, ...item })
             }
         } catch (error) {
-            message.error('归还失败');
+            console.log(error, 'restore error');
+            message.error(error.message);
         } finally {
             getAllEquipments();
         }
@@ -88,7 +110,8 @@ const Home = () => {
                 await updateEquipment({ id: key, ...item })
             }
         } catch (error) {
-            message.error('领用失败');
+            console.log(error, 'receive error');
+            message.error(error.message);
         } finally {
             getAllEquipments();
         }
@@ -110,22 +133,34 @@ const Home = () => {
         const ctgInputRef = useRef(null);
         const [newLocation, setNewLocation] = useState('');
         const locaInputRef = useRef(null);
-        let inputNode = <Input style={{ width: 100 }} />;
-        if (inputType === 'textArea') {
-            inputNode = <TextArea style={{ width: 100 }} autoSize={{ minRows: 1, maxRows: 3 }} />;
+        let inputNode=<Input style={{ width: 100 }} maxLength={middleInputLength} />;
+        if (inputType === 'shortTextArea') {
+            inputNode = <TextArea style={{ width: 100 }} maxLength={shortInputLength} autoSize={{ minRows: 1, maxRows: 3 }} />;
+        }
+        else if (inputType === 'middleTextArea') {
+            inputNode = <TextArea style={{ width: 100 }} maxLength={middleInputLength} autoSize={{ minRows: 1, maxRows: 3 }} />;
+        }
+        else if (inputType === 'longTextArea') {
+            inputNode = <TextArea style={{ width: 100 }} maxLength={longInputLength} autoSize={{ minRows: 1, maxRows: 3 }} />;
         }
         else if (inputType === 'upload') {
             const props = {
                 name: 'file',
                 beforeUpload: beforeUpload,
                 customRequest: async detail => {
-                    setFile(detail.file);
-                    const reader = new FileReader();
-                    reader.readAsDataURL(detail.file);
-                    reader.onload = function () {
-                        setImgUrl(reader.result);
-                    };
-                    detail.onSuccess();
+                    try {
+                        setFile(detail.file);
+                        const reader = new FileReader();
+                        reader.readAsDataURL(detail.file);
+                        reader.onload = function () {
+                            setImgUrl(reader.result);
+                        };
+                        detail.onSuccess();
+                    }
+                    catch (error) {
+                        console.log(error, 'upload photo error');
+                        message.error('上传失败');
+                    }
                 },
                 headers: {
                     authorization: 'authorization-text',
@@ -160,14 +195,19 @@ const Home = () => {
                 setNewLocation(event.target.value);
             };
             const addItem = async (e) => {
-                e.preventDefault();
-                if (newLocation === '') return message.error('新位置不能为空');
-                await addItems('location', { location: newLocation });
-                getLocations();
-                setNewLocation('');
-                setTimeout(() => {
-                    locaInputRef.current?.focus();
-                }, 0);
+                try {
+                    e.preventDefault();
+                    if (newLocation === '') return message.error('新位置不能为空');
+                    await addItems('location', { location: newLocation });
+                    getLocations();
+                    setNewLocation('');
+                    setTimeout(() => {
+                        locaInputRef.current?.focus();
+                    }, 0);
+                } catch (error) {
+                    console.log(error, 'add location error');
+                    message.error(error.message);
+                }
             };
             inputNode = <Select
                 style={{
@@ -184,6 +224,7 @@ const Home = () => {
                                 ref={locaInputRef}
                                 value={newLocation}
                                 onChange={onNameChange}
+                                maxLength={middleInputLength}
                             />
                             <Button type="text" icon={<PlusOutlined />} onClick={addItem}>
                             </Button>
@@ -199,14 +240,19 @@ const Home = () => {
         else if (inputType === 'selectCategory') {
             // inputNode=<SelectCategory categories={categories} getCategories={getCategories}/>
             const addItem = async (e) => {
-                e.preventDefault();
-                if (newCategory === '') return message.error('新类别不能为空');
-                await addItems('category', { category: newCategory });
-                getCategories();
-                setNewCategory('');
-                setTimeout(() => {
-                    ctgInputRef.current?.focus();
-                }, 0);
+                try {
+                    e.preventDefault();
+                    if (newCategory === '') return message.error('新类别不能为空');
+                    await addItems('category', { category: newCategory });
+                    await getCategories();
+                    setNewCategory('');
+                    setTimeout(() => {
+                        ctgInputRef.current?.focus();
+                    }, 0);
+                } catch (error) {
+                    console.log(error, 'add category error');
+                    message.error(error.message);
+                }
             }
             const onNameChange = (event) => {
                 setNewCategory(event.target.value);
@@ -228,6 +274,7 @@ const Home = () => {
                                 value={newCategory}
                                 onChange={onNameChange}
                                 onKeyDown={(e) => e.stopPropagation()}
+                                maxLength={shortInputLength}
                             />
                             <Button type="text" icon={<PlusOutlined />} onClick={addItem}>
                             </Button>
@@ -252,15 +299,7 @@ const Home = () => {
                         style={{
                             margin: 0,
                         }}
-                        rules={[
-                            title === '名称' || title === '类别' || title === '资产编号' ?
-                                {
-                                    required: true,
-                                    message: `请输入${title}!`,
-                                } : {
-                                    required: false,
-                                },
-                        ]}
+                        rules={tableRules(title)}
                     >
                         {inputNode}
                     </Form.Item>
@@ -303,8 +342,10 @@ const Home = () => {
                 row.username = '';
             }
             await updateEquipment({ id: key, ...row });
-        } catch (errInfo) {
-            message.error('修改失败');
+            message.success('保存成功');
+        } catch (error) {
+            console.log(error, 'save error');
+            message.error(error.message);
         } finally {
             getAllEquipments();
             setEditingKey('');
@@ -312,12 +353,14 @@ const Home = () => {
         }
     };
     async function del(key) {
-        const is_del = await deleteEquipment(key);
-        if (is_del) {
+        try {
+            await deleteEquipment(key);
             await getAllEquipments();
+            message.success('删除成功');
+        } catch (error) {
+            console.log(error, 'delete error');
+            message.error(error.message);
         }
-        else
-            message.error('删除失败');
     }
 
     const columns = [{
@@ -533,7 +576,7 @@ const Home = () => {
             sorter.order ? setSorter(true) : setSorter(false);
         } catch (error) {
             console.log(error);
-            message.error('操作失败');
+            message.error(error.message);
         }
     };
     const [open, setOpen] = useState(false);
@@ -559,7 +602,7 @@ const Home = () => {
         }
         catch (error) {
             console.log(error, 'create new equipment error');
-            message.error('添加失败');
+            message.error(error.message);
         }
         finally {
             setOpen(false);
