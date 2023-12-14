@@ -69,8 +69,10 @@ tr.ant-table-row.ant-table-row-level-0.deep td.ant-table-cell.dark.ant-table-col
   box-shadow: 0px 2px 4px #F8F8F8;
 }
 
-.addBtn {
+.controlBut {
   margin-bottom: 20px;
+  display: flex;
+  justify-content: flex-end;
 }
 .user{
   margin-top: 48px;
@@ -79,4 +81,7 @@ tr.ant-table-row.ant-table-row-level-0.deep td.ant-table-cell.dark.ant-table-col
   position: absolute;
   top: 44px;
   right: 5%;
+}
+.logout:hover, .iconButton:hover {
+  cursor: pointer;
 }

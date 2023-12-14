@@ -48,6 +48,7 @@ const fallback = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMIAAADDCAYAAADQ
 
 const tableRules = (title) => {
 
+    // eslint-disable-next-line default-case
     switch (title) {
         case '名称':
             return [{
@@ -115,8 +116,6 @@ const tableRules = (title) => {
                 message: '输入不能全为空格'
             }
             ]
-        default:
-            return [{}];
     }
 
 }

@@ -1,16 +1,18 @@
-import { Form, Image, Upload, Badge, DatePicker, Input, Popconfirm, Table, Select, Divider, Space, Row, Col, Tag, Button, message } from 'antd';
+import { Form, Image, Upload, Badge, DatePicker, Input, Popconfirm, Table, Select, Divider, Space, Row, Col, Tag, Button, message, Tooltip } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { useState, useRef, useEffect } from 'react';
 import './home.css';
 import { useNavigate } from 'react-router-dom';
-import { Logout } from '@icon-park/react'
+import { Logout, AddFour } from '@icon-park/react'
 import { state, classfyInput, selectStateOptions, fallback, tableRules } from './components/config';
 import { updateEquipment, addEquipment, uploadPhoto, deleteEquipment, getItems, addItems } from './service';
 import dayjs from 'dayjs';
 import { beforeUpload, equiFormat } from '../component/utils';
 import { pageSize } from '../component/config';
 import CollectionCreateForm from './components/collectionCreateForm';
-import { shortInputLength,longInputLength,middleInputLength } from '../component/config';
+import { shortInputLength, longInputLength, middleInputLength } from '../component/config';
+import UploadCsv from './components/uploadCsv';
+import ExportRecords from './components/exportRecords';
 const { TextArea } = Input;
 const uploadTip = (
     <div>
@@ -76,6 +78,7 @@ const Home = () => {
     const [editingKey, setEditingKey] = useState('');
     const [file, setFile] = useState('');
     const [imageUrl, setImgUrl] = useState('');
+
     const restore = async (key) => {
         try {
             const newData = [...data];
@@ -133,7 +136,7 @@ const Home = () => {
         const ctgInputRef = useRef(null);
         const [newLocation, setNewLocation] = useState('');
         const locaInputRef = useRef(null);
-        let inputNode=<Input style={{ width: 100 }} maxLength={middleInputLength} />;
+        let inputNode = <Input style={{ width: 100 }} maxLength={middleInputLength} />;
         if (inputType === 'shortTextArea') {
             inputNode = <TextArea style={{ width: 100 }} maxLength={shortInputLength} autoSize={{ minRows: 1, maxRows: 3 }} />;
         }
@@ -238,7 +241,6 @@ const Home = () => {
             />
         }
         else if (inputType === 'selectCategory') {
-            // inputNode=<SelectCategory categories={categories} getCategories={getCategories}/>
             const addItem = async (e) => {
                 try {
                     e.preventDefault();
@@ -310,7 +312,8 @@ const Home = () => {
         );
     };
     const handleAdd = async () => {
-        if (tableFilter || tableSorter) return message.error('请先取消筛选或排序');
+        setFilteredInfo({ "categories": [], "usernames": [], "states": [], "locations": [] });
+        setSortedInfo({});
         if (editingKey === '') {
             setOpen(true);
         }
@@ -318,13 +321,16 @@ const Home = () => {
             message.error('请先保存正在编辑的设备信息');
         }
     }
-    const edit = (record) => {
+    const edit = async (record) => {
         form.setFieldsValue({
-            name: '',
-            category: '',
-            number: '',
+            // name: '',
+            // category: '',
+            // number: '',
             ...record,
         });
+        // console.log(record, 'record')
+        // const row=await form.validateFields();
+        // console.log(row,'row')
         setEditingKey(record.key);
     };
     const cancel = () => {
@@ -334,6 +340,7 @@ const Home = () => {
     const save = async (key) => {
         try {
             const row = await form.validateFields();
+            console.log(row, 'row');
             if (file !== '') await uploadPhoto(file, key);
             if (row.state === 2 || row.state === 0) {
                 row.is_receive = 0;
@@ -341,11 +348,13 @@ const Home = () => {
                 row.user_id = 0;
                 row.username = '';
             }
+
             await updateEquipment({ id: key, ...row });
             message.success('保存成功');
         } catch (error) {
             console.log(error, 'save error');
-            message.error(error.message);
+            if (error.errorFields) message.error(error.errorFields[0].errors[0]);
+            else message.error(error.message);
         } finally {
             getAllEquipments();
             setEditingKey('');
@@ -362,16 +371,19 @@ const Home = () => {
             message.error(error.message);
         }
     }
-
+    const [sortedInfo, setSortedInfo] = useState({});
+    const [filteredInfo, setFilteredInfo] = useState({ "categories": [], "usernames": [], "states": [], "locations": [] });
     const columns = [{
         title: '名称',
         dataIndex: 'name',
         key: 'name',
         width: 150,
         editable: true,
+        sortOrder: sortedInfo.columnKey === 'name' ? sortedInfo.order : null,
         sorter: (a, b) => {
             return a.name.localeCompare(b.name);
         },
+        showSorterTooltip: false,
         className: 'dark',
         fixed: 'left'
     },
@@ -382,10 +394,13 @@ const Home = () => {
         width: 170,
         filters: categories.map((item) => { return { text: item, value: item } }),
         onFilter: (value, record) => record.category === value,
+        filteredValue: filteredInfo.categories,
         sorter: (a, b) => {
             console.log(a.category, b.category, a.category.localeCompare(b.category))
             return a.category.localeCompare(b.category);
         },
+        showSorterTooltip: false,
+        sortOrder: sortedInfo.columnKey === 'categories' ? sortedInfo.order : null,
         filterSearch: true,
         key: 'categories',
         editable: true,
@@ -397,31 +412,37 @@ const Home = () => {
         key: 'number',
         // width: 150,
         editable: true,
+        sortOrder: sortedInfo.columnKey === 'number' ? sortedInfo.order : null,
         sorter: (a, b) => {
             return a.number.localeCompare(b.number);
         },
+        showSorterTooltip: false,
         className: 'dark'
     }, {
         title: '购入时间',
         dataIndex: 'buy_time',
         width: 200,
         className: 'dark',
+        sortOrder: sortedInfo.columnKey === 'buy_time' ? sortedInfo.order : null,
         sorter: (a, b) => {
             return a.buy_time - b.buy_time;
         },
+        showSorterTooltip: false,
         render: (buy_time) => {
             return dayjs(buy_time).isValid() ? dayjs(buy_time).format('YYYY-MM-DD') : '';
         },
         key: 'buy_time',
-        required: false,
         editable: true,
     },
     {
         title: '使用者',
         dataIndex: 'username',
+        sortOrder: sortedInfo.columnKey === 'usernames' ? sortedInfo.order : null,
+        showSorterTooltip: false,
         // width: 150,
         filters: userFilter.map((item) => { return { text: item, value: item } }),
         onFilter: (value, record) => record.username === value,
+        filteredValue: filteredInfo.usernames,
         filterSearch: true,
         sorter: (a, b) => {
             return a.username.localeCompare(b.username);
@@ -434,6 +455,8 @@ const Home = () => {
         dataIndex: 'receive_time',
         className: 'dark',
         key: 'receive_time',
+        sortOrder: sortedInfo.columnKey === 'receive_time' ? sortedInfo.order : null,
+        showSorterTooltip: false,
         sorter: (a, b) => {
             return a.receive_time - b.receive_time;
         },
@@ -447,9 +470,11 @@ const Home = () => {
         key: 'states',
         className: 'dark',
         width: 130,
+        sortOrder: sortedInfo.columnKey === 'states' ? sortedInfo.order : null,
         sorter: (a, b) => {
             return a.state - b.state;
         },
+        showSorterTooltip: false,
         render: (state) => {
             switch (state) {
                 case 0:
@@ -462,6 +487,7 @@ const Home = () => {
         },
         filters: state,
         onFilter: (value, record) => record.state === value,
+        filteredValue: filteredInfo.states,
         editable: true,
     }, {
         title: '位置',
@@ -469,11 +495,14 @@ const Home = () => {
         className: 'dark',
         key: 'locations',
         width: 160,
+        sortOrder: sortedInfo.columnKey === 'locations' ? sortedInfo.order : null,
         sorter: (a, b) => {
             return a.location.localeCompare(b.location);
         },
+        showSorterTooltip: false,
         filters: locations.map((item) => { return { text: item, value: item } }),
         onFilter: (value, record) => record.location === value,
+        filteredValue: filteredInfo.locations,
         filterSearch: true,
         editable: true,
     }, {
@@ -507,6 +536,7 @@ const Home = () => {
         fixed: 'right',
         render: (text, record) => {
             const editable = isEditing(record);
+            console.log(record.user_id, localStorage.getItem('user_id'), 'kc user')
             return localStorage.getItem('groupname') === 'ADMIN' ? editable ? (<span>
                 <a
                     onClick={() => save(record.key)}
@@ -516,7 +546,7 @@ const Home = () => {
                 >
                     保存
                 </a>
-                <Popconfirm title="确认取消？" onConfirm={cancel}>
+                <Popconfirm okText="确认" cancelText="取消" title="确认取消？" onConfirm={cancel}>
                     <a>取消</a>
                 </Popconfirm>
             </span>) : (
@@ -528,25 +558,25 @@ const Home = () => {
                                 edit(record);
                                 record.photo_url ? setImgUrl(record.photo_url) : setImgUrl('');
                             }
-                        }} >编辑</Tag>
+                        }} ><a style={{ color: '#52c41a' }}>编辑</a></Tag>
                     </Col>
                     <Col span={8}>
-                        <Popconfirm title="确认删除？" onConfirm={() => del(record.key)}>
-                            <Tag color="red" >删除</Tag>
+                        <Popconfirm okText="确认" cancelText="取消" title="确认删除？" onConfirm={() => del(record.key)}>
+                            <Tag color="red" ><a style={{ color: '#ff4d4f' }}>删除</a></Tag>
                         </Popconfirm>
                     </Col>
                 </Row>
-            ) : (record.user_id === localStorage.getItem('user_id') ?
+            ) : (record.user_id === parseInt(localStorage.getItem('user_id'), 10) ?
                 <Row gutter={[8, 8]}>
                     <Col span={10}>
-                        <Popconfirm title="确认归还？" onConfirm={() => restore(record.key)}>
-                            <Tag color="magenta" >归还</Tag>
+                        <Popconfirm okText="确认" cancelText="取消" title="确认归还？" onConfirm={() => restore(record.key)}>
+                            <Tag color="magenta" ><a style={{ color: '#ff4d4f' }}>归还</a></Tag>
                         </Popconfirm>
                     </Col>
                 </Row> : (record.state === 0 ? <Row gutter={[8, 8]}>
                     <Col span={10}>
-                        <Popconfirm title="确认领用？" onConfirm={() => receive(record.key)}>
-                            <Tag color="geekblue">领用</Tag>
+                        <Popconfirm okText="确认" cancelText="取消" title="确认领用？" onConfirm={() => receive(record.key)}>
+                            <Tag color="geekblue"><a style={{ color: '#1d39c4' }}>领用</a></Tag>
                         </Popconfirm>
                     </Col>
                 </Row> : <></>)
@@ -568,18 +598,21 @@ const Home = () => {
             }),
         };
     });
-    const [tableFilter, setFilter] = useState(false);
-    const [tableSorter, setSorter] = useState(false);
+
     const onTableChange = async (pagination, filters, sorter) => {
-        try {
-            filters.states || filters.categories || filters.locations || filters.usernames ? setFilter(true) : setFilter(false);
-            sorter.order ? setSorter(true) : setSorter(false);
-        } catch (error) {
-            console.log(error);
-            message.error(error.message);
-        }
-    };
+        console.log(filters, sorter, pagination)
+        setSortedInfo(sorter);
+        setFilteredInfo(filters);
+    }
     const [open, setOpen] = useState(false);
+    const [newImg, setNewImg] = useState('');
+    const changeNewImgUrl = (url) => {
+        setNewImg(url);
+    }
+    const [imageFile, setImageFile] = useState('');
+    const changeImageFile = (file) => {
+        setImageFile(file);
+    }
     const onCreate = async (values) => {
         const newData = {
             name: values.name,
@@ -591,12 +624,12 @@ const Home = () => {
             receive_time: '',
             user_id: 0,
             username: '',
-            photo_url: '',
-            location: '',
+            location: values.location,
             configuration: values.configuration
         };
         try {
-            await addEquipment({ ...newData });
+            const id = await addEquipment({ ...newData });
+            if (imageFile !== '') await uploadPhoto(imageFile, id);
             await getAllEquipments();
             message.success('添加成功');
         }
@@ -606,33 +639,58 @@ const Home = () => {
         }
         finally {
             setOpen(false);
+            setNewImg('');
+            setImageFile('');
         }
     };
     return (
         <div className='home'>
             <Form form={form} component={false}>
-                {localStorage.getItem('groupname') === 'ADMIN' && <div className='addBtn'>
-                    <Button
-                        onClick={handleAdd}
-                        type="primary"
-                        style={{ backgroundColor: '#36304A', color: 'white', fontWeight: 'bolder' }}
-                    >
-                        添加设备
-                    </Button>
-                </div>}
-                <div className='logout'>
-                    <Logout theme="outline" size="25" fill="#36304A" strokeLinejoin="miter" strokeLinecap="square" onClick={() => {
-                        localStorage.removeItem('token');
-                        localStorage.removeItem('groupname');
-                        localStorage.removeItem('username');
-                        localStorage.removeItem('user_id');
-                        navigate('../')
-                    }} /></div>
+                {localStorage.getItem('groupname') === 'ADMIN' ?
+                    <div className='controlBut'>
+                        <Space size='large'>
+                        <div className='iconButton'><UploadCsv getAllEquipments={getAllEquipments} /></div>
+                        <div className='iconButton'><ExportRecords getAllEquipments={getAllEquipments} /></div>
+                        <div className='iconButton'>
+                            <Tooltip title="添加设备">
+                                <AddFour theme="filled" size="25" fill="#36304A" strokeLinejoin="bevel" onClick={handleAdd} />
+                            </Tooltip>
+                        </div>
+                        <div className='iconButton'>
+                            <Tooltip title="退出">
+                                <Logout theme="outline" size="25" fill="#36304A" strokeLinejoin="miter" strokeLinecap="square" onClick={() => {
+                                    localStorage.removeItem('token');
+                                    localStorage.removeItem('groupname');
+                                    localStorage.removeItem('username');
+                                    localStorage.removeItem('user_id');
+                                    navigate('../')
+                                }} />
+                            </Tooltip>
+                        </div>
+                        </Space>
+                    </div>
+                    : <div className='logout'>
+                        <Tooltip title="退出">
+                            <Logout theme="outline" size="25" fill="#36304A" strokeLinejoin="miter" strokeLinecap="square" onClick={() => {
+                                localStorage.removeItem('token');
+                                localStorage.removeItem('groupname');
+                                localStorage.removeItem('username');
+                                localStorage.removeItem('user_id');
+                                navigate('../')
+                            }} />
+                        </Tooltip>
+                    </div>}
+
                 <CollectionCreateForm
                     open={open}
+                    newImg={newImg}
+                    changeNewImgUrl={changeNewImgUrl}
                     onCreate={onCreate}
+                    changeImageFile={changeImageFile}
                     onCancel={() => {
                         setOpen(false);
+                        setNewImg('');
+                        setImageFile('');
                     }}
                 />
                 <div className={localStorage.getItem('groupname') === 'ADMIN' ? 'admin' : 'user'}>

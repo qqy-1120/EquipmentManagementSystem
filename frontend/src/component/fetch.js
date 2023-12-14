@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { message } from 'antd';
 import { localeMessage } from './utils';
 export const HOST = 'https://10.177.44.94:9091';
 export default function fetch(option = {}) {
