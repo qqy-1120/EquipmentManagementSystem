@@ -187,10 +187,7 @@ const Home = () => {
             inputNode = <Select
                 defaultValue="闲置"
                 style={{ width: 100, }}
-                options={selectStateOptions.map((item) => ({
-                    label: item.label,
-                    value: item.value,
-                }))}
+                options={selectStateOptions}
             />
         }
         else if (inputType === 'selectLocation') {

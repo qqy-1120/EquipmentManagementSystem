@@ -19,6 +19,11 @@ const selectStateOptions = [
         label: '闲置',
     },
     {
+        value: 1,
+        label: '正在使用',
+        disabled: true,
+    },
+    {
         value: 2,
         label: '已报废',
     },
