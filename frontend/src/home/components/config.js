@@ -84,10 +84,7 @@ const tableRules = (title) => {
                 message: '输入不能全为空格'
             }];
         case '资产编号':
-            return [{
-                required: true,
-                message: '请输入编号',
-            },
+            return [
             { type: 'string' },
             {
                 max: middleInputLength,

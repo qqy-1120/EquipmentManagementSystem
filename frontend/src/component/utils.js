@@ -100,8 +100,16 @@ const localeUsername = (username) => {
             return '毛鹏磊'
         case 'zhaowenxuan':
             return '赵文轩'
+        case 'raozihao':
+            return '饶子豪'
+        case 'cuimohan':
+            return '崔漠寒'
+        case 'admin':
+            return '管理员'
+        case 'bz':
+            return 'bz公用'
         default:
-            return '';
+            return username;
     }
 
 }

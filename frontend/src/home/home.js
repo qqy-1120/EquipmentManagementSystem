@@ -441,7 +441,7 @@ const Home = () => {
         sortOrder: sortedInfo.columnKey === 'usernames' ? sortedInfo.order : null,
         showSorterTooltip: false,
         // width: 150,
-        filters: userFilter.map((item) => { return { text: item, value: item } }),
+        filters: userFilter.map((item) => { return { text: localeUsername(item), value: item } }),
         onFilter: (value, record) => record.username === value,
         filteredValue: filteredInfo.usernames,
         filterSearch: true,

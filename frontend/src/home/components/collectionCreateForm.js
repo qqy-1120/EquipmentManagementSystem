@@ -163,12 +163,6 @@ const CollectionCreateForm = ({ open, onCreate,newImg,changeNewImgUrl, changeIma
         <Form.Item
           name="number"
           label="资产编号"
-          rules={[
-            {
-              required: true,
-              message: '输入资产编号',
-            },
-          ]}
         >
           <Input />
         </Form.Item>
