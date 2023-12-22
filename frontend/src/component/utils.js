@@ -108,6 +108,8 @@ const localeUsername = (username) => {
             return '管理员'
         case 'bz':
             return 'bz公用'
+        case 'qianzhigu':
+            return '钱芝谷'
         default:
             return username;
     }

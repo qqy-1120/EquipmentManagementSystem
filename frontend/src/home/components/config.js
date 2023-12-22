@@ -21,7 +21,6 @@ const selectStateOptions = [
     {
         value: 1,
         label: '正在使用',
-        disabled: true,
     },
     {
         value: 2,
@@ -45,6 +44,10 @@ const classfyInput = (dataIndex) => {
             return 'DatePicker';
         case 'photo_url':
             return 'upload';
+        case 'username':
+            return 'selectUser';
+        case 'receive_time':
+            return 'DatePicker';
         default:
             return 'input';
     }

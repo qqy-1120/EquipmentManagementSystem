@@ -134,11 +134,63 @@ const Home = () => {
     }) => {
         const [newCategory, setNewCategory] = useState('');
         const ctgInputRef = useRef(null);
+        const userInputRef = useRef(null);
         const [newLocation, setNewLocation] = useState('');
         const locaInputRef = useRef(null);
+        const [newUser, setNewUser] = useState('');
         let inputNode = <Input style={{ width: 100 }} maxLength={middleInputLength} />;
         if (inputType === 'shortTextArea') {
             inputNode = <TextArea style={{ width: 100 }} maxLength={shortInputLength} autoSize={{ minRows: 1, maxRows: 3 }} />;
+        }
+        else if (inputType === 'selectUser') {
+            console.log('kc user enter')
+            // const addItem = async (e) => {
+            //     try {
+            //         e.preventDefault();
+            //         if (newUser === '') return message.error('新类别不能为空');
+            //         await addItems('category', { category: newUser });
+            //         await getCategories();
+            //         setNewUser('');
+            //         setTimeout(() => {
+            //             userInputRef.current?.focus();
+            //         }, 0);
+            //     } catch (error) {
+            //         console.log(error, 'add category error');
+            //         message.error(error.message);
+            //     }
+            // }
+            // const onNameChange = (event) => {
+            //     setNewUser(event.target.value);
+            // }
+            inputNode = <Select
+                style={{
+                    width: 145,
+                }}
+                placeholder="选择用户"
+                dropdownRender={(menu) => (
+                    <>
+                        {menu}
+                        {console.log(menu)}
+                        {/* <Divider style={{ margin: '8px 0', }} />
+                        <Space style={{ padding: '0 8px 4px', }}>
+                            <Input
+                                placeholder="新类别"
+                                ref={userInputRef}
+                                value={newUser}
+                                onChange={onNameChange}
+                                onKeyDown={(e) => e.stopPropagation()}
+                                maxLength={shortInputLength}
+                            />
+                            <Button type="text" icon={<PlusOutlined />} onClick={addItem}>
+                            </Button>
+                        </Space> */}
+                    </>
+                )}
+                options={userFilter.map((item) => ({
+                    label: localeUsername(item),
+                    value: item,
+                }))}
+            />
         }
         else if (inputType === 'middleTextArea') {
             inputNode = <TextArea style={{ width: 100 }} maxLength={middleInputLength} autoSize={{ minRows: 1, maxRows: 3 }} />;
@@ -337,6 +389,7 @@ const Home = () => {
     const save = async (key) => {
         try {
             const row = await form.validateFields();
+            debugger
             console.log(row, 'row');
             if (file !== '') await uploadPhoto(file, key);
             if (row.state === 2 || row.state === 0) {
@@ -449,7 +502,7 @@ const Home = () => {
             return a.username.localeCompare(b.username);
         },
         key: 'usernames',
-        editable: false,
+        editable: true,
         className: 'dark',
         render: (username) => {
             return username === '' ? '' : localeUsername(username);
@@ -467,7 +520,7 @@ const Home = () => {
         render: (receive_time) => {
             return dayjs(receive_time).isValid() ? dayjs(receive_time).format('YYYY-MM-DD') : '';
         },
-        editable: false,
+        editable: true,
     }, {
         title: '使用状态',
         dataIndex: 'state',
@@ -554,9 +607,9 @@ const Home = () => {
                 >
                     保存
                 </a>
-                <Popconfirm okText="确认" cancelText="取消" title="确认取消？" onConfirm={cancel}>
-                    <a>取消</a>
-                </Popconfirm>
+                
+                    <a onClick={cancel}>取消</a>
+                
             </span>) : (
                 <Row gutter={[8, 8]}>
                     <Col span={8}>
@@ -574,7 +627,7 @@ const Home = () => {
                         </Popconfirm>
                     </Col>
                 </Row>
-            ) : (record.user_id === parseInt(localStorage.getItem('user_id'), 10) ?
+            ) : (record.username === localStorage.getItem('username') ?
                 <Row gutter={[8, 8]}>
                     <Col span={10}>
                         <Popconfirm okText="确认" cancelText="取消" title="确认归还？" onConfirm={() => restore(record.key)}>
@@ -657,13 +710,14 @@ const Home = () => {
                 {localStorage.getItem('groupname') === 'ADMIN' ?
                     <div className='controlBut'>
                         <Space size='large'>
-                        <div className='iconButton'><UploadCsv getAllEquipments={getAllEquipments} /></div>
-                        <div className='iconButton'><ExportRecords getAllEquipments={getAllEquipments} /></div>
                         <div className='iconButton'>
                             <Tooltip title="添加设备">
                                 <AddFour theme="filled" size="25" fill="#36304A" strokeLinejoin="bevel" onClick={handleAdd} />
                             </Tooltip>
                         </div>
+                        <div className='iconButton'><UploadCsv getAllEquipments={getAllEquipments} /></div>
+                        <div className='iconButton'><ExportRecords getAllEquipments={getAllEquipments} /></div>
+
                         <div className='iconButton'>
                             <Tooltip title="退出">
                                 <Logout theme="outline" size="25" fill="#36304A" strokeLinejoin="miter" strokeLinecap="square" onClick={() => {
