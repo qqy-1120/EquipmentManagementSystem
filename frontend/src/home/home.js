@@ -374,6 +374,10 @@ const Home = () => {
         title: '名称',
         dataIndex: 'name',
         key: 'name',
+        ellipsis: true,
+        render: name => {
+            return <Tooltip title={name}><span className='ellipsis'>{name}</span></Tooltip>
+        }, 
         width: 150,
         editable: true,
         sortOrder: sortedInfo.columnKey === 'name' ? sortedInfo.order : null,
@@ -508,8 +512,12 @@ const Home = () => {
     }, {
         title: '配置',
         dataIndex: 'configuration',
+        render: configuration => {  
+            return <Tooltip title={configuration}><span className='ellipsis'>{configuration}</span></Tooltip>
+        },
         required: false,
         key: 'configuration',
+        ellipsis: true,
         className: 'dark',
         editable: true,
     },
