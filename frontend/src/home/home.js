@@ -7,7 +7,7 @@ import { Logout, AddFour } from '@icon-park/react'
 import { state, classfyInput, selectStateOptions, fallback, tableRules } from './components/config';
 import { updateEquipment, addEquipment, uploadPhoto, deleteEquipment, getItems, addItems } from './service';
 import dayjs from 'dayjs';
-import { beforeUpload, equiFormat } from '../component/utils';
+import { beforeUpload, equiFormat,localeUsername } from '../component/utils';
 import { pageSize } from '../component/config';
 import CollectionCreateForm from './components/collectionCreateForm';
 import { shortInputLength, longInputLength, middleInputLength } from '../component/config';
@@ -446,7 +446,10 @@ const Home = () => {
         },
         key: 'usernames',
         editable: false,
-        className: 'dark'
+        className: 'dark',
+        render: (username) => {
+            return username === '' ? '' : localeUsername(username);
+        }
     }, {
         title: '领用时间',
         dataIndex: 'receive_time',

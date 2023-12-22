@@ -12,9 +12,7 @@ const beforeUpload = (file) => {
     return true;
 }
 const formatCsv = (str) => {
-    let newStr = '';
-    newStr = str?.substring(1, str.length - 2);
-    return newStr
+    return str;
 }
 const csvToArray = (csv) => {
     const rows = csv.split('\n');
@@ -52,9 +50,6 @@ const UploadCsv = ({ getAllEquipments }) => {
             console.log(error, 'create new equipment error');
             message.error(error.message);
         }
-        finally {
-            //setFile
-        }
     };
     const props = {
         name: 'file',
@@ -63,12 +58,11 @@ const UploadCsv = ({ getAllEquipments }) => {
         customRequest: async detail => {
             try {
                 const reader = new FileReader();
-                // 如果中文解析失败 GB2312
-                reader.readAsText(detail.file, 'utf-8');
+                // 中文解析GB2312
+                reader.readAsText(detail.file, 'GB2312');
                 reader.onload = async function () {
                     const res = csvToArray(reader.result);
                     await onCreate(res)
-
                 };
                 detail.onSuccess();
             }

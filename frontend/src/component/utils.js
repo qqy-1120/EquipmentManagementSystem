@@ -20,6 +20,7 @@ const equiFormat = (data) => {
             buy_time: item.buy_time && item.buy_time !== '' ? dayjs(item.buy_time) : '',
             location: item.location ? item.location : '',
             username: item.username ? item.username : '',
+            configuration: item.configuration ? item.configuration : ''
         }
     })
     return records;
@@ -27,7 +28,7 @@ const equiFormat = (data) => {
 const isValidStr = (str, maxLength) => {
     // Check if the string is all whitespace
     // Check if the string is too long
-    return str.trim().length === 0||str.length > maxLength? false:true;
+    return str.trim().length === 0 || str.length > maxLength ? false : true;
 }
 const localeMessage = (message) => {
     switch (message) {
@@ -51,20 +52,57 @@ const localeMessage = (message) => {
             return '请登录';
         case 'Login failed, please try again.':
             return '登录失败，请重试';
-        case 'Token has expired, please log in again.':   
-            return '登录已过期，请重新登录';    
-        case 'Token is illegal, please log in again.':     
+        case 'Token has expired, please log in again.':
+            return '登录已过期，请重新登录';
+        case 'Token is illegal, please log in again.':
             return '非法登录，请重新登录';
         case 'Logout failed, please try again.':
             return '登出失败，请重试';
         case 'Redis connection failed.':
             return 'Redis连接失败';
-        case 'Too many failed login attempts, please try again after 5 minutes.': 
+        case 'Too many failed login attempts, please try again after 5 minutes.':
             return '登录失败次数过多，请5分钟后重试';
-        case 'Insufficient permissions, access denied.':   
+        case 'Insufficient permissions, access denied.':
             return '权限不足，拒绝访问';
         default:
-            return '服务器错误';  
-}}
+            return '服务器错误';
+    }
+}
+const localeUsername = (username) => {
+    switch (username) {
+        case 'kangchun':
+            return '康春';
+        case 'qiuqingyang':
+            return '邱清扬';
+        case 'luoxuchuan':
+            return '罗旭川';
+        case 'zengruiying':
+            return '曾瑞莹';
+        case 'huyongxiang':
+            return '胡永祥';
+        case 'hushuqing':
+            return '胡述清';
+        case 'wangxuan':
+            return '王轩';
+        case 'wangyingchuan':
+            return '王颖川'
+        case 'duyuxuan':
+            return '杜雨轩'
+        case 'caimingxuan':
+            return '蔡铭轩'
+        case 'sunhan':
+            return '孙晗'
+        case 'wushengnan':
+            return '吴胜男'
+        case 'liujianing':
+            return '柳嘉宁'
+        case 'maopenglei':
+            return '毛鹏磊'
+        case 'zhaowenxuan':
+            return '赵文轩'
+        default:
+            return '';
+    }
 
-export { beforeUpload, equiFormat,isValidStr,localeMessage }
+}
+export { beforeUpload, equiFormat, isValidStr, localeMessage, localeUsername }
